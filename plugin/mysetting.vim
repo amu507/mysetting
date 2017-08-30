@@ -393,10 +393,10 @@ endif
 function! TxtWrap()
     if &filetype=="txt"||&filetype=="text"
         execute("set wrap")
-        echo "set wrap .".&filetype
+        silent echo "set wrap .".&filetype
     else
         execute("set nowrap")
-        echo ".".&filetype." wrap reback"
+        silent echo ".".&filetype." wrap reback"
     endif
 endfunction
 
@@ -602,21 +602,25 @@ function! BeforeLeave()
     call CloseLayout()
     call SaveSearch()
     call SaveBufMgr()
-    "execute('mksession! ' . g:g_MFSession)
-    "let lstLine=readfile(g:g_MFSession)
-    "let lstNew=[]
-    "for sLine in lstLine
-    "    call add(lstNew,sLine)
-    "    if stridx(sLine,"edit")==-1
-    "        continue
-    "    endif
-    "    call add(lstNew,"filetype detect")
-    "endfor
-    "call writefile(lstNew,g:g_MFSession)
+    if g:OS#win
+        execute('mksession! ' . g:g_MFSession)
+        let lstLine=readfile(g:g_MFSession)
+        let lstNew=[]
+        for sLine in lstLine
+            call add(lstNew,sLine)
+            if stridx(sLine,"edit")==-1
+                continue
+            endif
+            call add(lstNew,"filetype detect")
+        endfor
+        call writefile(lstNew,g:g_MFSession)
+    endif
 endfunction
 
 function! AfterEnter()
-    "execute('source ' . g:g_MFSession)
+    if g:OS#win
+        execute('source ' . g:g_MFSession)
+    endif
     call EnterOpen()
     call CreateBufMgr()
     call AftAuGroup()
@@ -709,13 +713,15 @@ function! InitAuGroup()
         autocmd!
         autocmd VimLeave * call BeforeLeave() 
         autocmd VimEnter * call AfterEnter() 
-		"t_vb must set here
-		"autocmd GUIEnter * set vb t_vb=
-        "autocmd QuickfixCmdPost make call QfMakeConv()
-        "autocmd BufWritePost * call BuildTag()  
-        "autocmd BufWritePost * call BuildCS()  
-        "autocmd WinEnter * call SysOnWinEnter()  
-        "autocmd BufReadPre * call BigFile(expand("<afile>"))  
+        if g:OS#win
+		    "t_vb must set here
+		    autocmd GUIEnter * set vb t_vb=
+            autocmd QuickfixCmdPost make call QfMakeConv()
+            autocmd BufWritePost * call BuildTag()  
+            autocmd BufWritePost * call BuildCS()  
+            autocmd WinEnter * call SysOnWinEnter()  
+            autocmd BufReadPre * call BigFile(expand("<afile>"))  
+        endif
     augroup END
 endfunction
 call InitAuGroup()
