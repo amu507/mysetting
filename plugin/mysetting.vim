@@ -27,19 +27,21 @@ endif
 if g:OS#win
     source $VIMRUNTIME/mswin.vim
     behave mswin
-    let $VIMFOLDER = $VIM.'/vimfiles'
-	let $VIMFILE = $VIM.'/_vimrc'
-	let $WORK = 'D:/work/server'
-elseif g:OS#unix
+    let $VIMFOLDER = $VIM.'\vimfiles'
+    let $BUNDLE = $VIMFOLDER.'\bundle'
+	let $VIMFILE = $VIM.'\_vimrc'
+    let $MYSETTING= $BUNDLE.'\mysetting\plugin\mysetting.vim'
+	let $WORK = 'D:\work\server'
+else
     let $VIMFOLDER = $HOME.'~/.vim'
+    let $BUNDLE = $VIMFOLDER.'/bundle'
 	let $VIMFILE = $VIM.'/vimrc'
-elseif g:OS#mac
-    let $VIMFOLDER = $HOME.'/.vim'
-	let $VIMFILE = $VIM.'/vimrc'
-	let $GVIMFILE = $VIM.'/gvimrc'
-    let $WORK = $HOME.'work/server'
+    let $MYSETTING= $BUNDLE.'/mysetting/mysetting.vim'
+    if g:OS#mac
+	    let $GVIMFILE = $VIM.'/gvimrc'
+        let $WORK = $HOME.'work/server'
+    endif
 endif
-let $MySetFile= $VIMFOLDER.'mysetting/mysetting.vim'
 
 "名词设定
 let g:Author="WangZhiyun"
@@ -48,12 +50,12 @@ set autochdir
 set autoread
 
 "config ui_begin***************************************
-set number											"显示行号
-set laststatus=2									  "启用状态栏信息
-set cmdheight=2									   "设置命令行的高度为2，默认为1
-set cursorline										"突出显示当前行
-set nowrap											"设置不自动换行
-set shortmess=atI									 "去掉欢迎界面
+set number							"显示行号
+set laststatus=2				    "启用状态栏信息
+set cmdheight=2					    "设置命令行的高度为2，默认为1
+set cursorline						"突出显示当前行
+set nowrap							"设置不自动换行
+set shortmess=atI					"去掉欢迎界面
 set equalalways
 set eadirection=
 
@@ -108,8 +110,6 @@ function! SetTitle()
 		call add(tInfo,"\// Author	:".g:Author)
 		call add(tInfo,"\// Create	:".strftime("%Y-%m-%d %H:%M:%S"))
 		call add(tInfo,"\//===================================")
-	else
-		call setline(1,"newtype ".&filetype)
 	endif
 	call WriteTitle(tInfo,iLine)
 endfunction
@@ -126,27 +126,6 @@ function! AddModifyTime()
 	"let sAuthor="\# Author	:".g:Author
 	"call append(iCurLine+1,sAuthor)
 	execute("w!")
-endfunction
-
-function! SetAddPrintText()
-	let g:CurFileType=expand("%:e")
-	if expand("%:e") == "py"
-		let g:PrintText="print \"wzytxt=\""
-	elseif expand("%:e") == "java"
-		let g:PrintText="System.out.println(\"HelloWorld\")"
-	else
-		let g:PrintText="cur filetype no define!!!! ".g:CurFileType
-	endif
-	"call append(iCurLine,sText)
-endfunction
-
-function! AddPrintText()
-	let iCurLine=line(".")
-	let sText="no define!! ".expand("%:e")
-	if expand("%:e") == "py"
-		let sText="print \"wzytxt=\""
-	endif
-	call append(iCurLine,sText)
 endfunction
 
 function! F5Func()
@@ -235,24 +214,44 @@ if g:OS#win
     autocmd InsertEnter * call StartInsert()
 endif
 
+function! TxtWrap()
+    if &filetype=="txt"||&filetype=="text"
+        execute("set wrap")
+        echo "set wrap .".&filetype
+    else
+        execute("set nowrap")
+        echo ".".&filetype." wrap reback"
+    endif
+endfunction
+
+function! FileMapChange()
+    if &filetype=="py"||&filetype=="python"
+        nnoremap <leader>ad oprint "wzytxt======",
+        nnoremap <leader>dd :g/^.*print\ "wzytxt=.*$/d<cr>
+    elseif &filetype=="java"
+		nnoremap <leader>ad oSystem.out.println("wzytxt======");<left><left><left>
+        nnoremap <leader>dd :g/^.*println("wzytxt=.*$/d<cr>
+    elseif &filetype=="c"||&filetype=="cpp"
+		nnoremap <leader>ad oprintf("wzytxt======\n");<left><left><left><left><left>
+        nnoremap <leader>dd :g/^.*printf("wzytxt=.*$/d<cr>
+    endif
+endfunction
+
 "keymap================================================================================
 "文件
 nnoremap <leader>ov :e $VIMFILE<cr>
 nnoremap <leader>op :e $VIM/userdata/pros<cr>
-nnoremap <leader>om :e $MySetFile<cr>
-nnoremap <leader>oa :e $VIMFILE<cr>:vs $MySetFile<cr>
-nnoremap <leader>ua :source $VIMFILE<cr>:source $MySetFile<cr>
-nnoremap <leader>ec :execute("vsplit " . $VIM . '\vimfiles\colors\health.vim')<CR> 
+nnoremap <leader>om :e $MYSETTING<cr>
+nnoremap <leader>oa :e $VIMFILE<cr>:vs $MYSETTING<cr>
+nnoremap <leader>ua :source $VIMFILE<cr>:source $MYSETTING<cr>
+nnoremap <leader>ec :execute("vsplit " . $VIMFOLDER.'\colors\health.vim')<CR> 
 nnoremap <leader>em :messages<cr>
 nnoremap <leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
-nnoremap <leader>et :vsplit E:\work\pypy\test.py<cr>
 
 "输入
 nnoremap <leader>at :call AddModifyTime()<cr>
-"nnoremap <leader>ad oprint "wzytxt=",
-nnoremap <leader>ad :call SetAddPrintText()<cr>oprint "test".g:PrintText
-nnoremap <leader>dd :g/^.*print\ "wzytxt=.*$/d<cr>
 nnoremap <leader><leader>a :call AntiPEP8()<cr>
+nnoremap rr :%s/<C-R>=expand("<cword>")<CR>/<C-R>=expand("<cword>")<CR>/g<Left><Left><Left>
 
 "执行
 nnoremap <F5> :call F5Func()<cr>
@@ -264,8 +263,8 @@ nnoremap L $
 nnoremap H ^
 vnoremap L $
 vnoremap H ^
-nnoremap <A-w> :wq!<cr>
-vnoremap <A-w> :wq!<cr>
+nnoremap <A-w> :q<cr>
+vnoremap <A-w> :q<cr>
 
 nnoremap <A-Right> :vertical res +1\|set winfixwidth<cr>
 nnoremap <A-Left> :vertical res -1\|set winfixwidth<cr> 
