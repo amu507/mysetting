@@ -161,6 +161,8 @@ set ignorecase
 set smartcase
 "set noincsearch
 
+"syntax
+syntax on
 set background=light
 "搜索高亮
 set hlsearch
