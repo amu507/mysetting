@@ -696,6 +696,23 @@ function! FileMapChange()
 		nnoremap <leader>ad oprintf("wzytxt======\n");<left><left><left><left><left>
         nnoremap <leader>dd :g/^.*printf("wzytxt=.*$/d<cr>
     endif
+    if !InSysBuf()
+        if g:OS#mac
+            nnoremap <D-w> :wq!<cr>
+            vnoremap <D-w> :wq!<cr>
+        elseif g:OS#win
+            nnoremap <A-w> :wq!<cr>
+            vnoremap <A-w> :wq!<cr>
+        endif
+    else
+        if g:OS#mac
+            nnoremap <D-w> :w<cr>
+            vnoremap <D-w> :w<cr>
+        elseif g:OS#win
+            nnoremap <A-w> :w<cr>
+            vnoremap <A-w> :w<cr>
+        endif
+    endif
 endfunction
 
 function! SourceAllVimSetting()
