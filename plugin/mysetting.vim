@@ -171,6 +171,27 @@ set textwidth=500
 " 启用每行超过80列的字符提示（字体变蓝并加下划线），不启用就注释掉
 "au BufWinEnter * let w:m2=matchadd('Underlined', '\%>' . 80 . 'v.\+', -1)
 
+"默认窗口位置和大小
+winpos 0 0
+set lines=300 columns=300
+
+set errorformat+=%f:%l:%m
+set sessionoptions=buffers,folds,tabpages,help
+set listchars=eol:$,tab:>-,trail:.,extends:>,precedes:<,nbsp:_
+set fillchars=stl:\ ,stlnc:\ ,vert:\|,fold:-,diff:-
+
+"font
+"execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
+
+
+"keymap================================================================================
+"
+"注释多行
+"nmap <leader>an :,s#^#\##g<D-left>
+"vmap <leader><leader>an :line("."),s#^#//#g
+
+
+
 "导入变量
 "python << EOF
 "import cachesearch 
@@ -648,21 +669,13 @@ function! FileMapChange()
 endfunction
 
 function! SourceAllVimSetting()
-	execute("source $VIMFILE")
-	if g:OS#mac
-		execute("source $GVIMFILE")
-    else
-	    execute("source $MYSETTING")
-	endif
+	execute("source ".$VIMFILE)
+	execute("source ".$MYSETTING)
 endfunction
 
 function! OpenAllVimSetting()
-	execute("only")
-	execute("e $VIMFILE")
-	execute("vs  $MYSETTING")
-	if g:OS#mac
-		execute("vs $GVIMFILE")
-	endif
+	execute("e ".$VIMFILE)
+	execute("vs ".$MYSETTING)
 endfunction
 
 function! GotoWindow(sWin)
@@ -995,7 +1008,8 @@ nnoremap <leader>ov :e $VIMFILE<cr>
 nnoremap <leader>op :e $VIM/userdata/pros<cr>
 nnoremap <leader>om :e $MYSETTING<cr>
 nnoremap <leader>oa :call OpenAllVimSetting()<cr>
-nnoremap <leader>ua :call SourceAllVimSetting()<cr>
+"nnoremap <leader>ua :call SourceAllVimSetting()<cr>
+nnoremap <leader>ua :source $VIMFILE<cr>:source $MYSETTING<cr>
 nnoremap <leader>ec :execute("vsplit " . $VIMFOLDER.'\colors\health.vim')<CR> 
 nnoremap <leader>em :messages<cr>
 nnoremap <leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
