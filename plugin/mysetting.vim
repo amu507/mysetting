@@ -208,9 +208,7 @@ set fillchars=stl:\ ,stlnc:\ ,vert:\|,fold:-,diff:-
 execute("set dictionary+=" . g:g_DataPath . g:g_PathSplit . "dict.txt")
 
 "font
-if g:OS#win
-    execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
-endif
+execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
 
 
 "keymap================================================================================
