@@ -123,6 +123,16 @@ let g:Author="WangZhiyun"
 set autochdir
 set autoread
 
+"撤销文本缓存
+set undofile
+let g:g_UndoDir=g:g_DataPath.g:g_PathSplit.'undo'
+execute("set undodir=".g:g_UndoDir)
+if !isdirectory(g:g_UndoDir)
+    call mkdir(g:g_UndoDir,"p")
+endif
+"maxinum bumber of changes that can be undone
+set undolevels=1000
+
 "config ui_begin***************************************
 set number							"显示行号
 set laststatus=2				    "启用状态栏信息
@@ -132,6 +142,15 @@ set nowrap							"设置不自动换行
 set shortmess=atI					"去掉欢迎界面
 set equalalways
 set eadirection=
+
+"默认窗口位置和大小
+winpos 0 0
+set lines=400 columns=400
+if g:OS#gui
+    if g:OS#win
+        au GUIEnter * simalt ~x
+    endif
+endif
 
 "encoding
 set encoding=utf-8
@@ -172,10 +191,6 @@ let g:g_allschems=split(globpath($VIMRUNTIME . "/colors","*"),'\n')
 set textwidth=500
 " 启用每行超过80列的字符提示（字体变蓝并加下划线），不启用就注释掉
 "au BufWinEnter * let w:m2=matchadd('Underlined', '\%>' . 80 . 'v.\+', -1)
-
-"默认窗口位置和大小
-winpos 0 0
-set lines=300 columns=300
 
 set errorformat+=%f:%l:%m
 set sessionoptions=buffers,folds,tabpages,help
@@ -851,7 +866,7 @@ function! BeforeLeave()
     call CloseLayout()
     call SaveSearch()
     call SaveBufMgr()
-    if g:OS#win
+    if g:OS#win||g:OS#mac
         execute('mksession! ' . g:g_MFSession)
         let lstLine=readfile(g:g_MFSession)
         let lstNew=[]
@@ -867,7 +882,7 @@ function! BeforeLeave()
 endfunction
 
 function! AfterEnter()
-    if g:OS#win
+    if g:OS#win||g:OS#mac
         execute('source ' . g:g_MFSession)
     endif
     call EnterOpen()
