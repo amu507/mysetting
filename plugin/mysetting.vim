@@ -47,16 +47,16 @@ endif
 
 "============================================================================================================
 let mapleader = "-"
-let g:g_DataPath=$VIM . "/userdata"
+let g:g_DataPath=$VIM . g:g_PathSplit . "userdata"
 let g:g_FixBuff=['sys.effqf','NERD_tree','-MiniBufExplorer-','__Tag_List__']
 let g:g_LastWinr=-1
 let g:g_BufHis=[]
 let g:g_BufHisIdx=-1
 let g:g_InBufHis=0
 
-let g:g_MFSession=g:g_DataPath . '/mysession.vim'
+let g:g_MFSession=g:g_DataPath .g:g_PathSplit. 'mysession.vim'
 let g:g_EffqfName="sys.effqf"
-let g:g_SysEffqf=g:g_DataPath . '/' . g:g_EffqfName
+let g:g_SysEffqf=g:g_DataPath .g:g_PathSplit. g:g_EffqfName
 let g:g_ProPaths={}
 let g:g_ProExts={}
 let g:g_CurPro=""
@@ -67,7 +67,7 @@ let g:SuperTabDefaultCompletionType="context"
 function! ReadPros()
 	let sEval="" 
 	let sGval=""
-	for sLine in readfile(g:g_DataPath . '/pros')
+	for sLine in readfile(g:g_DataPath .g:g_PathSplit. 'pros')
 		let sLine=iconv(sLine,"gbk","utf-8")
 		if len(sLine)==#0
 			continue
@@ -195,7 +195,7 @@ set background=light
 "搜索高亮
 set hlsearch
 execute('colorscheme ' . g:g_MyColor)
-let g:g_allschems=split(globpath($VIMRUNTIME . "/colors","*"),'\n')
+let g:g_allschems=split(globpath($VIMRUNTIME .g:g_PathSplit. "colors","*"),'\n')
 
 set textwidth=500
 " 启用每行超过80列的字符提示（字体变蓝并加下划线），不启用就注释掉
