@@ -148,9 +148,13 @@ winpos 0 0
 set lines=400 columns=400
 if g:OS#gui
     if g:OS#win
+        "max window 
         au GUIEnter * simalt ~x
     endif
 endif
+
+"efficient
+set hidden
 
 "encoding
 set encoding=utf-8
@@ -158,6 +162,11 @@ set fileencoding=gbk
 "set fileencoding=utf-8
 set fileencodings=utf-8,gbk
 "set termencoding=utf8
+
+"fold
+set foldenable                                        "启用折叠
+"set foldmethod=manual                                 "indent 折叠方式
+set foldmethod=indent                                 "indent 折叠方式
 
 "indent and fold 
 set smartindent									   "启用智能对齐方式
@@ -196,9 +205,12 @@ set errorformat+=%f:%l:%m
 set sessionoptions=buffers,folds,tabpages,help
 set listchars=eol:$,tab:>-,trail:.,extends:>,precedes:<,nbsp:_
 set fillchars=stl:\ ,stlnc:\ ,vert:\|,fold:-,diff:-
+execute("set dictionary+=" . g:g_DataPath . g:g_PathSplit . "dict.txt")
 
 "font
-"execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
+if g:OS#win
+    execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
+endif
 
 
 "keymap================================================================================
@@ -764,6 +776,39 @@ function! ChangePro(sNewPro)
 	call OnChangePro(a:sNewPro)
 endfunction
 
+function! OnChangePro(sPro)
+	if !has_key(g:g_ProPaths,a:sPro)
+		return
+	endif
+
+	let g:pymode_lint_options_pylint={}
+	let dOpt=g:pymode_lint_options_pylint
+	let sAllPath=""
+	for lstTmp in values(g:g_ProPaths)
+		for sTmp in lstTmp
+			let sAllPath=sAllPath . ",\"" . sTmp . "\"" 
+		endfor
+	endfor
+	if len(sAllPath)!=#0 
+		let sAllPath=sAllPath[1:]
+	endif
+
+	let sCurPath="" 
+	for sTmp in g:g_ProPaths[a:sPro]
+		let sCurPath=sCurPath . ",\"" . sTmp . "\""
+	endfor
+	if len(sCurPath)!=#0 
+		let sCurPath=sCurPath[1:]
+	endif
+
+	let sInitHook='import sys'
+	let sInitHook=sInitHook . ';setT=set(sys.path)-set([' . sAllPath . '])'
+	let sInitHook=sInitHook . ';setT=setT.union(set([' . sCurPath . ']))'
+	let sInitHook=sInitHook . ';sys.path=list(set(setT));'
+	let dOpt['init-hook']=sInitHook
+	let dOpt['additional-builtins']=g:g_Builtins
+endfunction
+
 function! FrontBufHis()
 	if g:g_BufHisIdx>=#-1
 		echo "front of his"
@@ -1013,7 +1058,7 @@ inoremap <F9> <ESC>:call Run()<CR>
 
 "布局
 nnoremap <F2> :call OnlyTabBuff()<cr> 
-nnoremap <F3> :tabnew\|call ClearTabBufs()\|call BasicLayout()<cr>
+nnoremap <F3> :tabnew\|call ClearTabBufs()\|call BasicLayout()\|execute("NERDTree " . g:g_DefaultTree)<cr>
 nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<cr>
 nnoremap <Leader>lo :call BasicLayout()<cr>
 
@@ -1087,5 +1132,6 @@ nnoremap <Leader>gl :call GotoWindow("__Tag_List__")<cr>
 nnoremap <Leader>ge :call GotoEffqfLine()<cr>
 nnoremap <Leader>p :wincmd }<cr>
 nnoremap <Leader>cp :pclose<cr>
+set previewheight=2
 
 
