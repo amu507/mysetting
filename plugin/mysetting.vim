@@ -42,6 +42,10 @@ else
     if g:OS#mac
 	    let $GVIMFILE = $VIM.'/gvimrc'
         let $WORK = $HOME.'work/server'
+        "输入法设置
+        "set noimd
+        "set imi=2
+        "set ims=2
     endif
 endif
 
@@ -672,13 +676,24 @@ if g:OS#win
     autocmd InsertEnter * call StartInsert()
 endif
 
+function! CurFileInBundle()
+    let sPath=expand("%:p")
+    let sPathList=split(sPath,g:g_PathSplit)
+    for sName in sPathList
+        if sName=="bundle"
+            return 1
+        endif
+    endfor
+    return 0
+endfunction
+
 function! FileSetChange()
-    if &filetype=="txt"||&filetype=="text"
+    if &filetype=="text"
         silent execute("set wrap")
     else
         silent execute("set nowrap")
     endif
-    if &filetype=="vim"
+    if &filetype=="vim"||CurFileInBundle()
         silent execute("set fileencoding=utf-8")
     else
         silent execute("set fileencoding=gbk")
@@ -695,6 +710,19 @@ function! FileMapChange()
     elseif &filetype=="c"||&filetype=="cpp"
 		nnoremap <leader>ad oprintf("wzytxt======\n");<left><left><left><left><left>
         nnoremap <leader>dd :g/^.*printf("wzytxt=.*$/d<cr>
+    endif
+    if &filetype=="text"
+        inoremap （ （）<left>
+        inoremap 《 《》<left>
+        inoremap “ “”<left>
+        inoremap 【 【】<left>
+        inoremap ‘ ‘’<left>
+    "else
+    "    iunmap （ （）<left>
+    "    iunmap 《 《》<left>
+    "    iunmap “ “”<left>
+    "    iunmap 【 【】<left>
+    "    iunmap ‘ ‘’<left>
     endif
     if !InSysBuf()
         if g:OS#mac
@@ -1132,7 +1160,6 @@ nmap <c-s-right> <c-pagedown>
 inoremap ( ()<left>
 inoremap [ []<left>
 inoremap { {}<left>
-inoremap （ （）<left>
 
 "use imap do not need type cr when complete 
 imap <c-k> <Up>
