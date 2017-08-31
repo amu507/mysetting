@@ -674,16 +674,14 @@ endif
 
 function! FileSetChange()
     if &filetype=="txt"||&filetype=="text"
-        execute("set wrap")
+        silent execute("set wrap")
     else
-        execute("set nowrap")
+        silent execute("set nowrap")
     endif
     if &filetype=="vim"
-        execute("set fileencoding=utf-8")
-        echo "fileencoding=utf-8"
+        silent execute("set fileencoding=utf-8")
     else
-        execute("set fileencoding=gbk")
-        echo "fileencoding=gbk"
+        silent execute("set fileencoding=gbk")
     endif
 endfunction
 
@@ -955,7 +953,7 @@ function! BasicLayout()
 	execute("bo new " . g:g_SysEffqf . "|resize 5|set winfixheight|filetype detect")
     NERDTree
     execute("normal tl")
-    execute("set equalalways")
+    silent execute("set equalalways")
 endfunction
 
 function! NewSysEffqf()
