@@ -161,7 +161,7 @@ set encoding=utf-8
 set fileencoding=gbk
 "set fileencoding=utf-8
 set fileencodings=utf-8,gbk
-"set termencoding=utf8
+set termencoding=utf-8
 
 "fold
 set foldenable                                        "启用折叠
@@ -672,13 +672,18 @@ if g:OS#win
     autocmd InsertEnter * call StartInsert()
 endif
 
-function! TxtWrap()
+function! FileSetChange()
     if &filetype=="txt"||&filetype=="text"
         execute("set wrap")
-        silent echo "set wrap .".&filetype
     else
         execute("set nowrap")
-        silent echo ".".&filetype." wrap reback"
+    endif
+    if &filetype=="vim"
+        execute("set fileencoding=utf-8")
+        echo "fileencoding=utf-8"
+    else
+        execute("set fileencoding=gbk")
+        echo "fileencoding=gbk"
     endif
 endfunction
 
@@ -869,7 +874,7 @@ function! OnChangeDir()
 	if InSysBuf()
 		return
 	endif
-	call TxtWrap()
+	call FileSetChange()
 	call FileMapChange()
     let sNewPath=expand("%:p")
 	"bufhis
@@ -950,6 +955,7 @@ function! BasicLayout()
 	execute("bo new " . g:g_SysEffqf . "|resize 5|set winfixheight|filetype detect")
     NERDTree
     execute("normal tl")
+    execute("set equalalways")
 endfunction
 
 function! NewSysEffqf()
@@ -1040,7 +1046,6 @@ if g:OS#win
 	nnoremap <F5> :call F5Func()<cr>
 
 	nnoremap <F12> :!start explorer /select, %:p<cr>
-	nnoremap <leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
 	nnoremap <leader><Leader>d :call DelCurFile()<cr>
 	nnoremap <A-w> :q<cr>
 	vnoremap <A-w> :q<cr>
@@ -1049,8 +1054,10 @@ else
 
 	nnoremap <c-s> :w!<cr>
 	vnoremap <c-s> :w!<cr>
+    nnoremap <D-r> <c-r>
 endif
 
+nnoremap <leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
 nnoremap <F9> :call Run()<CR>
 inoremap <F9> <ESC>:call Run()<CR>
 
