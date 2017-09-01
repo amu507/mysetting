@@ -146,11 +146,16 @@ set nowrap							"设置不自动换行
 set shortmess=atI					"去掉欢迎界面
 set equalalways
 set eadirection=
+"help guioptions 滚动条、工具栏
+set guioptions-=r
+set guioptions-=L
+set guioptions-=b
+set guioptions-=T
 
 "默认窗口位置和大小
-winpos 0 0
-set lines=400 columns=400
 if g:OS#gui
+    winpos 0 0
+    set lines=400 columns=400
     if g:OS#win
         "max window 
         au GUIEnter * simalt ~x
@@ -163,14 +168,8 @@ set hidden
 "encoding
 set encoding=utf-8
 set fileencoding=gbk
-"set fileencoding=utf-8
 set fileencodings=utf-8,gbk
 set termencoding=utf-8
-
-"fold
-set foldenable                                        "启用折叠
-"set foldmethod=manual                                 "indent 折叠方式
-set foldmethod=indent                                 "indent 折叠方式
 
 "indent and fold 
 set smartindent									   "启用智能对齐方式
@@ -216,12 +215,6 @@ execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
 
 
 "keymap================================================================================
-"
-"注释多行
-"nmap <leader>an :,s#^#\##g<D-left>
-"vmap <leader><leader>an :line("."),s#^#//#g
-
-
 
 "导入变量
 "python << EOF
@@ -230,6 +223,88 @@ execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
 "EOF
 
 "func============================================================================================================
+"多行注释：
+"1. 进入命令行模式，按ctrl + v进入 visual block模式，然后按j, 或者k选中多行，把需要注释的行标记起来
+"2. 按大写字母I，再插入注释符，例如//
+"3. 按esc键就会全部注释了
+"
+"取消多行注释：
+"1. 进入命令行模式，按ctrl + v进入 visual block模式，按字母l横向选中列的个数，例如 // 需要选中2列
+"2. 按字母j，或者k选中注释符号
+"3. 按d键就可全部取消注释
+"功能说明:加入或删除注释//
+"映射和绑定
+"
+nmap :Setcomment
+imap :Setcomment
+vmap :SetcommentV
+command! -nargs=0 Setcomment call s:SET_COMMENT()
+command! -nargs=0 SetcommentV call s:SET_COMMENTV()
+"
+"非视图模式下所调用的函数
+function! s:SET_COMMENT()
+    let lindex=line(”.”)
+    let str=getline(lindex)
+    "查看当前是否为注释行
+    let CommentMsg=s:IsComment(str)
+    call s:SET_COMMENTV_LINE(lindex,CommentMsg[1],CommentMsg[0])
+endfunction
+
+"视图模式下所调用的函数
+function! s:SET_COMMENTV()
+    let lbeginindex=line("‘<") "得到视图中的第一行的行数
+    let lendindex=line("'>") "得到视图中的最后一行的行数
+    let str=getline(lbeginindex)
+    "查看当前是否为注释行
+    let CommentMsg=s:IsComment(str)
+    "为各行设置
+    let i=lbeginindex
+    while i<=lendindex
+        call s:SET_COMMENTV_LINE(i,CommentMsg[1],CommentMsg[0])
+        let i=i+1
+    endwhile
+endfunction
+
+"设置注释
+"index:在第几行
+"pos:在第几列
+"comment_flag: 0:添加注释符 1:删除注释符
+function! s:SET_COMMENTV_LINE( index,pos, comment_flag )
+    let poscur = [0, 0,0, 0]
+    let poscur[1]=a:index
+    let poscur[2]=a:pos+1
+    call setpos(”.”,poscur) "设置光标的位置
+
+    if a:comment_flag==0
+    "插入//
+        exec "normal! i//"
+    else
+    "删除//
+        exec "normal! xx"
+    endif
+endfunction
+
+"查看当前是否为注释行并返回相关信息
+"str:一行代码
+function! s:IsComment(str)
+    let ret= [0, 0] "第一项为是否为注释行（0,1）,第二项为要处理的列，
+    let i=0
+    let strlen=len(a:str)
+    while i "空格和tab允许为”//”的前缀
+        if !(a:str[i]==’ ‘ || a:str[i] == ‘ ‘ )
+            let ret[1]=i
+            if a:str[i]==’/’ && a:str[i+1]==’/’
+                let ret[0]=1
+            else
+                let ret[0]=0
+            endif
+            return ret
+        endif
+        let i=i+1
+    endwhile
+    return [0,0] "空串处理
+endfunction
+"======end 多行注释
 
 "color scheme
 function! ChangeScheme()
@@ -677,6 +752,9 @@ if g:OS#win
 endif
 
 function! CurFileInBundle()
+    if InSysBuf()
+        return 0
+    endif
     let sPath=expand("%:p")
     let sPathList=split(sPath,g:g_PathSplit)
     for sName in sPathList
@@ -687,65 +765,81 @@ function! CurFileInBundle()
     return 0
 endfunction
 
-function! FileSetChange()
-    if &filetype=="text"
-        silent execute("set wrap")
-    else
-        silent execute("set nowrap")
+function! IsRealFile()
+    if InSysBuf()
+        return 0
     endif
-    if &filetype=="vim"||CurFileInBundle()
-        silent execute("set fileencoding=utf-8")
-    else
-        silent execute("set fileencoding=gbk")
+    for sType in ["text","python","vim","c","cpp","h","java"]
+        if sType==&filetype
+            return 1
+        endif
+    endfor
+    return 0
+endfunction
+
+function! FileSetChange()
+    if IsRealFile()
+        if &filetype=="text"
+            silent execute("set wrap")
+        else
+            silent execute("set nowrap")
+        endif
+        if &filetype=="vim"||CurFileInBundle()
+            silent execute("set fileencoding=utf-8")
+        else
+            silent execute("set fileencoding=gbk")
+        endif
     endif
 endfunction
 
 function! FileMapChange()
-    if &filetype=="py"||&filetype=="python"
-        nnoremap <leader>ad oprint "wzytxt======",
-        nnoremap <leader>dd :g/^.*print\ "wzytxt=.*$/d<cr>
-    elseif &filetype=="java"
-		nnoremap <leader>ad oSystem.out.println("wzytxt======");<left><left><left>
-        nnoremap <leader>dd :g/^.*println("wzytxt=.*$/d<cr>
-    elseif &filetype=="c"||&filetype=="cpp"
-		nnoremap <leader>ad oprintf("wzytxt======\n");<left><left><left><left><left>
-        nnoremap <leader>dd :g/^.*printf("wzytxt=.*$/d<cr>
-    endif
-    if &filetype=="text"
-        inoremap （ （）<left>
-        inoremap 《 《》<left>
-        inoremap “ “”<left>
-        inoremap 【 【】<left>
-        inoremap ‘ ‘’<left>
-    "else
-    "    iunmap （ （）<left>
-    "    iunmap 《 《》<left>
-    "    iunmap “ “”<left>
-    "    iunmap 【 【】<left>
-    "    iunmap ‘ ‘’<left>
+    if IsRealFile()
+        if &filetype=="python"
+            nnoremap <Leader>ad oprint "wzytxt======",
+            nnoremap <Leader>dd :g/^.*print\ "wzytxt=.*$/d<CR>
+        elseif &filetype=="java"
+	    	nnoremap <Leader>ad oSystem.out.println("wzytxt======");<left><left><left>
+            nnoremap <Leader>dd :g/^.*println("wzytxt=.*$/d<CR>
+        elseif &filetype=="c"||&filetype=="cpp"
+	    	nnoremap <Leader>ad oprintf("wzytxt======\n");<left><left><left><left><left>
+            nnoremap <Leader>dd :g/^.*printf("wzytxt=.*$/d<CR>
+        endif
+        if &filetype=="text"
+            inoremap （ （）<left>
+            inoremap 《 《》<left>
+            inoremap “ “”<left>
+            inoremap 【 【】<left>
+            inoremap ‘ ‘’<left>
+        "else
+        "    iunmap （ （）<left>
+        "    iunmap 《 《》<left>
+        "    iunmap “ “”<left>
+        "    iunmap 【 【】<left>
+        "    iunmap ‘ ‘’<left>
+        endif
     endif
     if !InSysBuf()
         if g:OS#mac
-            nnoremap <D-w> :wq!<cr>
-            vnoremap <D-w> :wq!<cr>
+            nnoremap <D-w> :wq!<CR>
+            vnoremap <D-w> :wq!<CR>
         elseif g:OS#win
-            nnoremap <A-w> :wq!<cr>
-            vnoremap <A-w> :wq!<cr>
+            nnoremap <A-w> :wq!<CR>
+            vnoremap <A-w> :wq!<CR>
         endif
     else
         if g:OS#mac
-            nnoremap <D-w> :w<cr>
-            vnoremap <D-w> :w<cr>
+            nnoremap <D-w> :w<CR>
+            vnoremap <D-w> :w<CR>
         elseif g:OS#win
-            nnoremap <A-w> :w<cr>
-            vnoremap <A-w> :w<cr>
+            nnoremap <A-w> :w<CR>
+            vnoremap <A-w> :w<CR>
         endif
     endif
 endfunction
 
 function! SourceAllVimSetting()
-	execute("source ".$VIMFILE)
-	execute("source ".$MYSETTING)
+	silent execute("source ".$VIMFILE)
+	silent execute("source ".$MYSETTING)
 endfunction
 
 function! OpenAllVimSetting()
@@ -1086,68 +1180,72 @@ call InitAuGroup()
 "keymap================================================================================
 
 if g:OS#win
-	nnoremap <F5> :call F5Func()<cr>
+	nnoremap <F5> :call F5Func()<CR>
 
-	nnoremap <F12> :!start explorer /select, %:p<cr>
-	nnoremap <leader><Leader>d :call DelCurFile()<cr>
-	nnoremap <A-w> :q<cr>
-	vnoremap <A-w> :q<cr>
+	nnoremap <F12> :!start explorer /select, %:p<CR>
+	nnoremap <Leader><Leader>d :call DelCurFile()<CR>
+	nnoremap <A-w> :q<CR>
+	vnoremap <A-w> :q<CR>
 else
-	nnoremap <F5> :call CompileAndRun()<cr>
+	nnoremap <F5> :call CompileAndRun()<CR>
 
-	nnoremap <c-s> :w!<cr>
-	vnoremap <c-s> :w!<cr>
+	nnoremap <c-s> :w!<CR>
+	vnoremap <c-s> :w!<CR>
     nnoremap <D-r> <c-r>
 endif
 
-nnoremap <leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
+nnoremap <Leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
 nnoremap <F9> :call Run()<CR>
 inoremap <F9> <ESC>:call Run()<CR>
 
+nnoremap <F7> :NERDTreeToggle<CR>
+inoremap <F7> <ESC>:NERDTreeToggle<CR>
+nnoremap <F11> :NERDTreeFind<CR>
+inoremap <F11> <ESC>:NERDTreeFind<CR>
+
 "布局
-nnoremap <F2> :call OnlyTabBuff()<cr> 
-nnoremap <F3> :tabnew\|call ClearTabBufs()\|call BasicLayout()\|execute("NERDTree " . g:g_DefaultTree)<cr>
-nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<cr>
-nnoremap <Leader>lo :call BasicLayout()<cr>
+nnoremap <F2> :call OnlyTabBuff()<CR> 
+nnoremap <F3> :tabnew\|call ClearTabBufs()\|call BasicLayout()\|execute("NERDTree " . g:g_DefaultTree)<CR>
+nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<CR>
+nnoremap <Leader>lo :call BasicLayout()<CR>
 
 "改变配色
-nnoremap <Leader>cc :call ChangeScheme()<cr>
+nnoremap <Leader>cc :call ChangeScheme()<CR>
 
 "文件
-nnoremap <leader>ov :e $VIMFILE<cr>
-nnoremap <leader>op :e $VIM/userdata/pros<cr>
-nnoremap <leader>om :e $MYSETTING<cr>
-nnoremap <leader>oa :call OpenAllVimSetting()<cr>
-"nnoremap <leader>ua :call SourceAllVimSetting()<cr>
-nnoremap <leader>ua :source $VIMFILE<cr>:source $MYSETTING<cr>
-nnoremap <leader>ec :execute("vsplit " . $VIMFOLDER.'\colors\health.vim')<CR> 
-nnoremap <leader>em :messages<cr>
-nnoremap <leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
+nnoremap <Leader>ov :e $VIMFILE<CR>
+nnoremap <Leader>op :e $VIM/userdata/pros<CR>
+nnoremap <Leader>om :e $MYSETTING<CR>
+nnoremap <Leader>oa :call OpenAllVimSetting()<CR>
+nnoremap <Leader>ua :call SourceAllVimSetting()<CR>
+"nnoremap <Leader>ua :source $VIMFILE\|source $MYSETTING<CR>
+nnoremap <Leader>ec :execute("vsplit " . $VIMFOLDER.'\colors\health.vim')<CR> 
+nnoremap <Leader>em :messages<CR>
+nnoremap <Leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
 
 "输入
-nnoremap <leader>at :call AddModifyTime()<cr>
-nnoremap <leader><leader>a :call AntiPEP8()<cr>
+nnoremap <Leader>at :call AddModifyTime()<CR>
+nnoremap <Leader><Leader>a :call AntiPEP8()<CR>
 nnoremap rr :%s/<C-R>=expand("<cword>")<CR>/<C-R>=expand("<cword>")<CR>/g<Left><Left>
 
 "map
-nnoremap <leader>ss :execute("w\|source " . expand("%:p"))<CR> "保存加载当前文件
+nnoremap <Leader>ss :execute("w\|source " . expand("%:p"))<CR> "保存加载当前文件
 
 nnoremap L $
 nnoremap H ^
 vnoremap L $
 vnoremap H ^
 
-nnoremap <A-Right> :vertical res +1\|set winfixwidth<cr>
-nnoremap <A-Left> :vertical res -1\|set winfixwidth<cr> 
-nnoremap <A-Up> :res -1\|set winfixheight<cr>
-nnoremap <A-Down> :res +1\|set winfixheight<cr>
+nnoremap <A-Right> :vertical res +1\|set winfixwidth<CR>
+nnoremap <A-Left> :vertical res -1\|set winfixwidth<CR> 
+nnoremap <A-Up> :res -1\|set winfixheight<CR>
+nnoremap <A-Down> :res +1\|set winfixheight<CR>
 
-nnoremap <F11> :NERDTreeFind<cr>
-nnoremap <leader>y ^vg_"*y 
-nnoremap <leader>w viw"*y
-vnoremap <leader>y "*y
-nnoremap <leader><leader>y ^vg_"*y:stop<cr> 
-vnoremap <leader><leader>y "*y:stop<cr>
+nnoremap <Leader>y ^vg_"*y 
+nnoremap <Leader>w viw"*y
+vnoremap <Leader>y "*y
+nnoremap <Leader><Leader>y ^vg_"*y:stop<CR> 
+vnoremap <Leader><Leader>y "*y:stop<CR>
 
 nnoremap <c-k> <c-w>k
 nnoremap <c-j> <c-w>j
@@ -1172,13 +1270,13 @@ nnoremap tl :TlistClose<CR>:TlistToggle<CR>
 nnoremap tlc :TlistClose<CR>
 
 "goto
-nnoremap <Leader>gq :call GotoWindow("sys.effqf")<cr> 
-nnoremap <Leader>gt :call GotoWindow("NERD_tree")<cr> 
-nnoremap <Leader>gm :call GotoWindow("-MiniBufExplorer-")<cr> 
-nnoremap <Leader>gl :call GotoWindow("__Tag_List__")<cr> 
-nnoremap <Leader>ge :call GotoEffqfLine()<cr>
-nnoremap <Leader>p :wincmd }<cr>
-nnoremap <Leader>cp :pclose<cr>
+nnoremap <Leader>gq :call GotoWindow("sys.effqf")<CR> 
+nnoremap <Leader>gt :call GotoWindow("NERD_tree")<CR> 
+nnoremap <Leader>gm :call GotoWindow("-MiniBufExplorer-")<CR> 
+nnoremap <Leader>gl :call GotoWindow("__Tag_List__")<CR> 
+nnoremap <Leader>ge :call GotoEffqfLine()<CR>
+nnoremap <Leader>p :wincmd }<CR>
+nnoremap <Leader>cp :pclose<CR>
 set previewheight=2
 
 
