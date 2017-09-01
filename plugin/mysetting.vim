@@ -223,6 +223,30 @@ execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
 "EOF
 
 "func============================================================================================================
+function! Execmd(sCMD,...)
+    let iMode=get(a:000,0,0)
+	"no window,no wait
+    if iMode==0
+        let sEXE='silent !start /b cmd /c "'
+        let sEXE=sEXE . a:sCMD . '"'
+	"has window,wait,no hit-enter 
+    elseif iMode==1
+        let sEXE='silent !cmd /c "'
+        let sEXE=sEXE . a:sCMD . '"'
+	"has window,wait,hit-enter
+    elseif iMode==2
+        let sEXE='!cmd /c "'
+        let sEXE=sEXE . a:sCMD . '"'
+	"has window no wait,hit-enter
+	elseif iMode==3
+        let sEXE='silent !start cmd /c "'
+        let sEXE=sEXE . a:sCMD . '&&pause"'
+"	else
+"        let sEXE='silent !start /b cmd /c "'
+"        let sEXE=sEXE . a:sCMD . '"'
+    endif
+    execute(sEXE)
+endfunction
 "多行注释：
 "1. 进入命令行模式，按ctrl + v进入 visual block模式，然后按j, 或者k选中多行，把需要注释的行标记起来
 "2. 按大写字母I，再插入注释符，例如//
@@ -235,11 +259,11 @@ execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
 "功能说明:加入或删除注释//
 "映射和绑定
 "
-nmap :Setcomment
-imap :Setcomment
-vmap :SetcommentV
-command! -nargs=0 Setcomment call s:SET_COMMENT()
-command! -nargs=0 SetcommentV call s:SET_COMMENTV()
+"command! -nargs=0 Setcomment call s:SET_COMMENT()
+"command! -nargs=0 SetcommentV call s:SET_COMMENTV()
+"nmap :Setcomment
+"imap :Setcomment
+"vmap :SetcommentV
 "
 "非视图模式下所调用的函数
 function! s:SET_COMMENT()
