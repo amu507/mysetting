@@ -820,7 +820,7 @@ function! BuildTag(...)
     for sSub in g:g_ProPaths[g:g_CurPro]
         let sCMD=sCMD . ' ' . sSub
     endfor
-    echo sCMD
+    "win下ctags占用太多cpu，又太多进程；mac下Execmd不能用。先屏蔽ctags
     return
     call Execmd(sCMD,iMode)
 endfunction
