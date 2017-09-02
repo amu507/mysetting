@@ -861,11 +861,6 @@ function! FileMapChange()
     endif
 endfunction
 
-function! SourceAllVimSetting()
-	silent execute("source ".$VIMFILE)
-	silent execute("source ".$MYSETTING)
-endfunction
-
 function! OpenAllVimSetting()
 	execute("e ".$VIMFILE)
 	execute("vs ".$MYSETTING)
@@ -895,6 +890,8 @@ function! BuildTag(...)
     for sSub in g:g_ProPaths[g:g_CurPro]
         let sCMD=sCMD . ' ' . sSub
     endfor
+    echo sCMD
+    return
     call Execmd(sCMD,iMode)
 endfunction
 
@@ -927,7 +924,7 @@ function! ChangePro(sNewPro)
     if !filereadable(g:g_TagPath)
         call BuildTag(1)
     endif
-    execute("set tags=" . g:g_TagPath)
+    "execute("set tags=" . g:g_TagPath)
 
     if g:g_UseCS==#1
         if !filereadable(g:g_CSOut)
@@ -1241,8 +1238,7 @@ nnoremap <Leader>ov :e $VIMFILE<CR>
 nnoremap <Leader>op :e $VIM/userdata/pros<CR>
 nnoremap <Leader>om :e $MYSETTING<CR>
 nnoremap <Leader>oa :call OpenAllVimSetting()<CR>
-nnoremap <Leader>ua :call SourceAllVimSetting()<CR>
-"nnoremap <Leader>ua :source $VIMFILE\|source $MYSETTING<CR>
+nnoremap <Leader>ua :source $VIMFILE\|source $MYSETTING<CR>
 nnoremap <Leader>ec :execute("vsplit " . $VIMFOLDER.'\colors\health.vim')<CR> 
 nnoremap <Leader>em :messages<CR>
 nnoremap <Leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
