@@ -1216,6 +1216,7 @@ else
 endif
 
 nnoremap <Leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
+nnoremap <Leader><Leader>c :call CheckPy()<CR>
 nnoremap <F9> :call Run()<CR>
 inoremap <F9> <ESC>:call Run()<CR>
 
