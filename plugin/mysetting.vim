@@ -92,6 +92,31 @@ function! ReadPros()
 endfunction
 call ReadPros()
 
+function! Execmd(sCMD,...)
+    let iMode=get(a:000,0,0)
+	"no window,no wait
+    if iMode==0
+        let sEXE='silent !start /b cmd /c "'
+        let sEXE=sEXE . a:sCMD . '"'
+	"has window,wait,no hit-enter 
+    elseif iMode==1
+        let sEXE='silent !cmd /c "'
+        let sEXE=sEXE . a:sCMD . '"'
+	"has window,wait,hit-enter
+    elseif iMode==2
+        let sEXE='!cmd /c "'
+        let sEXE=sEXE . a:sCMD . '"'
+	"has window no wait,hit-enter
+	elseif iMode==3
+        let sEXE='silent !start cmd /c "'
+        let sEXE=sEXE . a:sCMD . '&&pause"'
+"	else
+"        let sEXE='silent !start /b cmd /c "'
+"        let sEXE=sEXE . a:sCMD . '"'
+    endif
+    execute(sEXE)
+endfunction
+
 function! SysInit()
 	if !filereadable(g:g_SysEffqf)||g:OS#win
 		let sCMD="fsutil file createnew " . g:g_SysEffqf . " 0" 
@@ -235,30 +260,6 @@ function! CommentFunc(sLine,sRange)
 	endif
 endfunction
 
-function! Execmd(sCMD,...)
-    let iMode=get(a:000,0,0)
-	"no window,no wait
-    if iMode==0
-        let sEXE='silent !start /b cmd /c "'
-        let sEXE=sEXE . a:sCMD . '"'
-	"has window,wait,no hit-enter 
-    elseif iMode==1
-        let sEXE='silent !cmd /c "'
-        let sEXE=sEXE . a:sCMD . '"'
-	"has window,wait,hit-enter
-    elseif iMode==2
-        let sEXE='!cmd /c "'
-        let sEXE=sEXE . a:sCMD . '"'
-	"has window no wait,hit-enter
-	elseif iMode==3
-        let sEXE='silent !start cmd /c "'
-        let sEXE=sEXE . a:sCMD . '&&pause"'
-"	else
-"        let sEXE='silent !start /b cmd /c "'
-"        let sEXE=sEXE . a:sCMD . '"'
-    endif
-    execute(sEXE)
-endfunction
 
 "color scheme
 function! ChangeScheme()
