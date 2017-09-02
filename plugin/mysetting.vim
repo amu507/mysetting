@@ -917,9 +917,9 @@ endfunction
 function! ChangePro(sNewPro)
     let g:g_CurPro=a:sNewPro
     let g:g_CurDB=g:g_Pro2DB[g:g_CurPro]
-    let g:g_TagPath=g:g_CurDB . '\systag'
-    let g:g_CSOut=g:g_CurDB . '\cscope.out'
-    let g:g_CSFiles=g:g_CurDB . '\cscope.files'
+    let g:g_TagPath=g:g_CurDB .g:g_PathSplit. 'systag'
+    let g:g_CSOut=g:g_CurDB .g:g_PathSplit. 'cscope.out'
+    let g:g_CSFiles=g:g_CurDB .g:g_PathSplit. 'cscope.files'
 
     if !filereadable(g:g_TagPath)
         call BuildTag(1)
@@ -1062,7 +1062,7 @@ function! OnChangeDir()
     if sNewPro==#""
         return
     endif
-    if g:OS#win
+    if g:OS#win||g:OS#mac
         call ChangePro(sNewPro)
     endif
 endfunction
@@ -1184,7 +1184,7 @@ function! InitAuGroup()
         autocmd!
         autocmd VimLeave * call BeforeLeave() 
         autocmd VimEnter * call AfterEnter() 
-        if g:OS#win
+        if g:OS#win||g:OS#mac
 		    "t_vb must set here
 		    autocmd GUIEnter * set vb t_vb=
             autocmd QuickfixCmdPost make call QfMakeConv()
