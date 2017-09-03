@@ -42,7 +42,8 @@ else
     let g:g_PathSplit="/"
     if g:OS#mac
 	    let $GVIMFILE = $VIM.'/gvimrc'
-        let $WORK = $HOME.'/Data/work/server'
+        let $WORK = $HOME.'/Data/work'
+        let $SERVER = $WORK.'/server'
         "输入法设置
         "set noimd
         "set imi=2
@@ -193,7 +194,7 @@ set hidden
 
 "encoding
 set encoding=utf-8
-set fileencoding=gbk
+set fileencoding=utf-8
 set fileencodings=utf-8,gbk
 set termencoding=utf-8
 
@@ -260,6 +261,43 @@ function! CommentFunc(sLine,sRange)
 	endif
 endfunction
 
+function! GetEffectiveLine(sMsg)
+    let l:sMsg=getline(a:sMsg)
+python << EOF
+from vimenv import env
+sMsg=env.var("l:sMsg")
+sSpaceList=[" ","　"]
+sSpace=" "
+for sStr in sSpaceList:
+    if sStr==sMsg[0:len(sStr)]:
+        sSpace=sStr
+        break
+iSpaceCnt=0
+iSpaceLen=len(sSpace)
+sLine=""
+for i in xrange(0,len(sMsg)/iSpaceLen):
+    sStr=sMsg[i*iSpaceLen:(i+1)*iSpaceLen]
+    if sStr==sSpace:
+        iSpaceCnt+=1
+    else:
+        sLine=sMsg[iSpaceCnt*iSpaceLen:]
+        break
+sPreLine=iSpaceCnt*sSpace
+env.exe("let l:sPreLine=\"%s\""%sPreLine)
+env.exe("let l:sLine=\"%s\""%sLine)
+EOF
+    return [l:sPreLine,l:sLine]
+endfunction
+
+function! CommentFunc(sLine,sRange)
+	let sComment=get({'py':'#','cpp':'//','c':'//','h':'//','vim':'"','java':'//'},expand('%:e'),'#')
+	let iComment=len(sComment)
+	if getline(a:sLine)[0: 0+iComment-1]==#sComment
+		execute(a:sRange . " normal " . "0" . iComment . "x")
+	else
+		execute(a:sRange . " normal " . "0i" . sComment)
+	endif
+endfunction
 
 "color scheme
 function! ChangeScheme()
@@ -720,6 +758,23 @@ function! CurFileInBundle()
     return 0
 endfunction
 
+function! CurFileInWorkSvn()
+    if InSysBuf()
+        return 0
+    endif
+python << EOF
+from vimenv import env
+sWorkPath=env.var("$SERVER")
+sCurFilePath=env.var("expand(\"%:p:h\")")
+if sCurFilePath.startswith(sWorkPath):
+    iRet=1
+else:
+    iRet=0
+env.exe("let l:iRet=%s"%iRet)
+EOF
+    return l:iRet
+endfunction
+
 function! IsRealFile()
     if InSysBuf()
         return 0
@@ -739,12 +794,13 @@ function! FileSetChange()
         else
             silent execute("set nowrap")
         endif
-        if &filetype=="vim"||CurFileInBundle()
-            silent execute("set fileencoding=utf-8")
-        else
-            silent execute("set fileencoding=gbk")
-        endif
     endif
+    "if CurFileInWorkSvn()
+    "    "只有svn里的文件的编码是gbk
+    "    silent execute("set fileencoding=gbk")
+    "else
+    "    silent execute("set fileencoding=utf-8")
+    "endif
 endfunction
 
 function! FileMapChange()
@@ -1149,7 +1205,7 @@ endif
 nnoremap <c-up> :call BackBufHis()<cr>
 nnoremap <c-down> :call FrontBufHis()<cr>
 vnoremap \\ :<c-w>call CommentFunc("'<","'<,'>-1")<cr>
-nnoremap \\ :call CommentFunc(".","")<cr>
+noremap \\ :call CommentFunc(".","")<cr>
 
 nnoremap <Leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
 nnoremap <Leader><Leader>c :call CheckPy()<CR>
