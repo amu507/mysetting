@@ -42,7 +42,7 @@ else
     let g:g_PathSplit="/"
     if g:OS#mac
 	    let $GVIMFILE = $VIM.'/gvimrc'
-        let $WORK = $HOME.'work/server'
+        let $WORK = $HOME.'/Data/work/server'
         "输入法设置
         "set noimd
         "set imi=2
