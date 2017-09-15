@@ -24,6 +24,12 @@ else
     let g:OS#gui = 0
 endif
 
+if $VIM=="/usr/share/vim"
+	let g:VimType="Origin"
+	let $VIM=$HOME."/.vim"
+else
+	let g:VimType="Normal"
+end
 "设置用户路径
 if g:OS#win
     source $VIMRUNTIME/mswin.vim
@@ -44,10 +50,6 @@ else
 	    let $GVIMFILE = $VIM.'/gvimrc'
         let $WORK = $HOME.'/Data/work'
         let $SERVER = $WORK.'/server'
-        "输入法设置
-        "set noimd
-        "set imi=2
-        "set ims=2
     endif
 endif
 
@@ -200,8 +202,8 @@ set termencoding=utf-8
 
 "indent and fold 
 set smartindent									   "启用智能对齐方式
-"set noexpandtab										 "将Tab键转换为空格
-set expandtab										 "将Tab键转换为空格
+set noexpandtab										 "将Tab键转换为空格
+"set expandtab										 "将Tab键转换为空格
 set tabstop=4										 "设置Tab键的宽度，可以更改，如：宽度为2
 set shiftwidth=4									  "换行时自动缩进宽度，可更改（宽度同tabstop）
 set smarttab										  "指定按一次backspace就删除shiftwidth宽度
@@ -224,7 +226,9 @@ syntax on
 set background=light
 "搜索高亮
 set hlsearch
-execute('colorscheme ' . g:g_MyColor)
+if exists("g:g_MyColor")
+	execute('colorscheme ' . g:g_MyColor)
+end
 let g:g_allschems=split(globpath($VIMRUNTIME .g:g_PathSplit. "colors","*"),'\n')
 
 set textwidth=500
@@ -238,7 +242,9 @@ set fillchars=stl:\ ,stlnc:\ ,vert:\|,fold:-,diff:-
 execute("set dictionary+=" . g:g_DataPath . g:g_PathSplit . "dict.txt")
 
 "font
-execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
+if exists("g:g_MyFont")
+	execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
+end
 
 
 "keymap================================================================================
@@ -252,9 +258,19 @@ execute('set guifont=' . g:g_MyFont . '|let &guifontwide=&guifont')
 "start_func============================================================================================================
 "多行注释
 function! CommentFunc(sLine,sRange)
-	let sComment=get({'py':'#','cpp':'//','c':'//','h':'//','vim':'"','java':'//'},expand('%:e'),'#')
+	let dComment={
+		'py':'#',
+		'cpp':'//',
+		'c':'//',
+		'h':'//',
+		'vim':'"',
+		'java':'//',
+		'txt':'	',
+		'lua':'--'
+	}
+	let sComment=get(dComment,expand('%:e'),'#')
 	let iComment=len(sComment)
-	if getline(a:sLine)[0: 0+iComment-1]==#sComment
+	if getline(a:sLine)[0:0+iComment-1]==#sComment
 		execute(a:sRange . " normal " . "0" . iComment . "x")
 	else
 		execute(a:sRange . " normal " . "0i" . sComment)
@@ -287,16 +303,6 @@ env.exe("let l:sPreLine=\"%s\""%sPreLine)
 env.exe("let l:sLine=\"%s\""%sLine)
 EOF
     return [l:sPreLine,l:sLine]
-endfunction
-
-function! CommentFunc(sLine,sRange)
-	let sComment=get({'py':'#','cpp':'//','c':'//','h':'//','vim':'"','java':'//'},expand('%:e'),'#')
-	let iComment=len(sComment)
-	if getline(a:sLine)[0: 0+iComment-1]==#sComment
-		execute(a:sRange . " normal " . "0" . iComment . "x")
-	else
-		execute(a:sRange . " normal " . "0i" . sComment)
-	endif
 endfunction
 
 "color scheme
@@ -385,6 +391,8 @@ function! CompileAndRun()
     elseif &filetype == 'mkd'
         exec "!~/.vim/markdown.pl % > %.html &"
         exec "!firefox %.html &"
+    elseif &filetype == 'lua'
+		exec "!time lua %"
     endif
 endfunction
 
@@ -720,12 +728,21 @@ endfunction
 "结束定义FormartSrc
 
 function! InsertTxtPEP8()
+    silent exec "set fileencoding=gbk"
 	let iCurLine=line(".")
     if (&filetype=="py"||&filetype=="python")&&(iCurLine!=0&&g:startinsertline!=0)
         let sExe='Autopep8 --range '.g:startinsertline.' '.iCurLine
         execute(sExe)
-        echo sExe
     endif
+    silent exec "set fileencoding=utf-8"
+endfunction
+
+function! AutoPEP8()
+    silent exec "set fileencoding=gbk"
+    silent w
+    call Autopep8()
+    silent exec "set fileencoding=utf-8"
+    silent w
 endfunction
 
 let g:startinsertline=0
@@ -779,7 +796,7 @@ function! IsRealFile()
     if InSysBuf()
         return 0
     endif
-    for sType in ["text","python","vim","c","cpp","h","java"]
+    for sType in ["text","python","vim","c","cpp","h","java","lua"]
         if sType==&filetype
             return 1
         endif
@@ -791,8 +808,10 @@ function! FileSetChange()
     if IsRealFile()
         if &filetype=="text"
             silent execute("set wrap")
+            silent execute("set noimd")
         else
             silent execute("set nowrap")
+            silent execute("set imd")
         endif
     endif
     "if CurFileInWorkSvn()
@@ -806,7 +825,10 @@ endfunction
 function! FileMapChange()
     if IsRealFile()
         if &filetype=="python"
-            nnoremap <Leader>ad oprint "wzytxt======",
+            nnoremap <Leader>ad oprint("wzytxt======")<left><left>
+            nnoremap <Leader>dd :g/^.*print\("wzytxt=.*$/d<CR>
+        elseif &filetype=="lua"
+            nnoremap <Leader>ad oprint("wzytxt======")<left><left>
             nnoremap <Leader>dd :g/^.*print\ "wzytxt=.*$/d<CR>
         elseif &filetype=="java"
 	    	nnoremap <Leader>ad oSystem.out.println("wzytxt======");<left><left><left>
@@ -819,14 +841,10 @@ function! FileMapChange()
             inoremap （ （）<left>
             inoremap 《 《》<left>
             inoremap “ “”<left>
+            inoremap ” “”<left>
             inoremap 【 【】<left>
+            inoremap ’ ‘’<left>
             inoremap ‘ ‘’<left>
-        "else
-        "    iunmap （ （）<left>
-        "    iunmap 《 《》<left>
-        "    iunmap “ “”<left>
-        "    iunmap 【 【】<left>
-        "    iunmap ‘ ‘’<left>
         endif
     endif
     if !InSysBuf()
@@ -1171,7 +1189,7 @@ function! InitAuGroup()
         autocmd!
         autocmd VimLeave * call BeforeLeave() 
         autocmd VimEnter * call AfterEnter() 
-        if g:OS#win||g:OS#mac
+        if g:VimType=="Normal"
 		    "t_vb must set here
 		    autocmd GUIEnter * set vb t_vb=
             autocmd QuickfixCmdPost make call QfMakeConv()
