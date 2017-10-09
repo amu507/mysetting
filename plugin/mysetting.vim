@@ -33,6 +33,9 @@ if g:OS#win
 	let $VIMFILE = $VIM.'\_vimrc'
 	let $MYSETTING= $BUNDLE.'\mysetting\plugin\mysetting.vim'
 	let $WORK = 'D:\work'
+	let $SERVER = $WORK.'\server'
+	let $MYLIB = $WORK.'\mylibrary'
+	let $GITHUB = $WORK . '\GitHub'
 	let g:g_PathSplit="\\"
 else
 	let $VIMFOLDER = $HOME.'/.vim'
@@ -199,7 +202,7 @@ set termencoding=utf-8
 
 "indent and fold 
 set smartindent									   "启用智能对齐方式
-set noexpandtab										 "将Tab键转换为空格
+set noexpandtab										 "将空格转换为Tab键
 "set expandtab										 "将Tab键转换为空格
 set tabstop=4										 "设置Tab键的宽度，可以更改，如：宽度为2
 set shiftwidth=4									  "换行时自动缩进宽度，可更改（宽度同tabstop）
@@ -852,6 +855,11 @@ function! FileSetChange()
 		else
 			silent execute("set nowrap")
 			silent execute("set imd")
+		endif
+		if &filetype=="python"
+			silent execute("set expandtab")
+		else
+			silent execute("set noexpandtab")
 		endif
 	endif
 	"if CurFileInWorkSvn()
