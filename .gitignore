@@ -1,3 +1,5 @@
 
 .sync/ID
 *.swp
+plugin/.DS_Store
+plugin/.mysetting.vim.un~
