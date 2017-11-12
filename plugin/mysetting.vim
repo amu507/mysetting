@@ -75,7 +75,8 @@ function! ReadPros()
 	let sEval="" 
 	let sGval=""
 	for sLine in readfile(g:g_DataPath .g:g_PathSplit. 'pros')
-		let sLine=iconv(sLine,"gbk","utf-8")
+		"transform encoding
+		"let sLine=iconv(sLine,"gbk","utf-8")
 		if len(sLine)==#0||sLine[0]=='#'
 			continue
 		endif
