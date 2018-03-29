@@ -37,19 +37,28 @@ if g:OS#win
 	let $MYLIB = $WORK.'\mylibrary'
 	let $GITHUB = $WORK . '\GitHub'
 	let g:g_PathSplit="\\"
-else
+elseif g:OS#mac
+	let $VIM = $HOME.'/.vim'
 	let $VIMFOLDER = $HOME.'/.vim'
 	let $BUNDLE = $VIMFOLDER.'/bundle'
-	let $VIMFILE = $VIM.'/vimrc'
+	let $VIMFILE = $VIM.'/gvimrc'
 	let $MYSETTING= $BUNDLE.'/mysetting/plugin/mysetting.vim'
+	let $WORK = $HOME.'/work'
+	let $SERVER = $WORK.'/server'
+	let $MYLIB = $WORK.'/mylibrary'
+	let $GITHUB = $WORK . '/GitHub'
 	let g:g_PathSplit="/"
-	if g:OS#mac
-		let $GVIMFILE = $VIM.'/gvimrc'
-		let $WORK = $HOME.'/work'
-		let $SERVER = $WORK.'/server'
-		let $MYLIB = $WORK.'/mylibrary'
-		let $GITHUB = $WORK . '/GitHub'
-	endif
+else
+	let $VIM = $HOME.'/.vim'
+	let $VIMFOLDER = $HOME.'/.vim'
+	let $BUNDLE = $VIMFOLDER.'/bundle'
+	let $VIMFILE = $VIM.'/gvimrc'
+	let $MYSETTING= $BUNDLE.'/mysetting/plugin/mysetting.vim'
+	let $WORK = $HOME.'/work'
+	let $SERVER = $WORK.'/server'
+	let $MYLIB = $WORK.'/mylibrary'
+	let $GITHUB = $WORK . '/GitHub'
+	let g:g_PathSplit="/"
 endif
 
 "start_readpros============================================================================================================
@@ -209,6 +218,11 @@ set tabstop=4										 "设置Tab键的宽度，可以更改，如：宽度为2
 set shiftwidth=4									  "换行时自动缩进宽度，可更改（宽度同tabstop）
 set smarttab										  "指定按一次backspace就删除shiftwidth宽度
 
+"indent: 如果用了:set indent,:set ai 等自动缩进，想用退格键将字段缩进的删掉，必须设置这个选项。否则不响应。
+"eol:如果插入模式下在行开头，想通过退格键合并两行，需要设置eol。
+"start：要想删除此次插入前的输入，需设置这个。
+set backspace=indent,eol,start
+
 "fold
 set foldenable										"启用折叠
 "set foldmethod=manual								 "indent 折叠方式
@@ -219,9 +233,9 @@ nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
 "search and replace
 nnoremap cS :%s/\s\+$//g<CR>:noh<CR>				  "clear space end of line
 "忽略大小写
-set ignorecase
+"set ignorecase
 "搜索时智能忽略大小写
-set smartcase
+"set smartcase
 
 "set noincsearch
 "在查找时输入字符过程中就高亮显示匹配点。然后回车跳到该匹配点。
@@ -236,6 +250,9 @@ if exists("g:g_MyColor")
 	execute('colorscheme ' . g:g_MyColor)
 end
 let g:g_allschems=split(globpath($VIMRUNTIME .g:g_PathSplit. "colors","*"),'\n')
+if exists("g:g_MyColorLib")
+	let g:g_allschems+=split(globpath(g:g_MyColorLib,"*"),'\n')
+end
 
 set textwidth=500
 " 启用每行超过80列的字符提示（字体变蓝并加下划线），不启用就注释掉
@@ -283,11 +300,9 @@ function! ClearSuffixFiles(...)
 endfunction
 
 function! GetCommentSign()
-	"let dComment={'py':'#','cpp':'//','c':'//','h':'//','vim':'"','java':'//','txt':'	','lua':'--','sh':'#'}
-	"let sComment=get(dComment,expand('%:e'),'#')
 	let dComment={'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--'}
 	"默认值不要改否则其它用到的地方会出错
-	let sComment=get(dComment,&filetype,'#')
+	let sComment=get(dComment,expand("%:e"),'#')
 	return sComment
 endfunction
 "多行注释
@@ -333,12 +348,22 @@ endfunction
 function! ChangeScheme()
 	let lstTmp=[]
 	let lstTmp2=[]
+	let iCnt=0
 	for i in range(0,len(g:g_allschems)-1)
-		call add(lstTmp,fnamemodify(g:g_allschems[i],":t:r") . "---->" . i)
-		call add(lstTmp2,fnamemodify(g:g_allschems[i],":t:r"))
+		let name=fnamemodify(g:g_allschems[i],":t:r")
+		if fnamemodify(g:g_allschems[i],":e")!="vim"
+			continue
+		end
+		let iCnt+=1
+		call add(lstTmp, name."---->". iCnt)
+		call add(lstTmp2,name)
 	endfor
+	"无输入时默认值是0,要避开这个值
 	let iFile=inputlist(lstTmp)
-	let sFile=get(lstTmp2,iFile,-1)
+	if iFile<1||iFile>len(lstTmp2)
+		return
+	end
+	let sFile=get(lstTmp2,iFile-1,-1)
 	if sFile==#-1
 		return
 	endif
@@ -346,7 +371,7 @@ function! ChangeScheme()
 endfunction
 
 "文件头添加注释
-autocmd BufNewFile *.py,*.java,*lua,*sh,*c,*cpp,*h exec ":call SetTitle()"
+autocmd BufNewFile *.py,*.java,*.lua,*.sh,*.c,*.cpp,*.h exec ":call SetTitle()"
 
 function! WriteTitle(tInfo,lineno)
 	let sComment=GetCommentSign()
@@ -738,13 +763,17 @@ function! MyTextFormat()
 	let sRight=" \\+"
 	let sLeft=" \\+"
 	let sComment=GetCommentSign()
+	let iStartLine=2
+	if &filetype=="lua"
+		let iStartLine=1
+	end
 	for sSign in lstBothOP+lstRigthOP
-		let sExe="2,$s/".sSign.sRight."/".sSign."/g"
+		let sExe=iStartLine.",$s/".sSign.sRight."/".sSign."/g"
 		execute(sExe)
 		echom sExe
 	endfor
 	for sSign in lstBothOP+lstLeftOP
-		let sExe="2,$s/".sLeft.sSign."/".sSign."/g"
+		let sExe=iStartLine.",$s/".sLeft.sSign."/".sSign."/g"
 		execute(sExe)
 	endfor
 endfunction
@@ -862,6 +891,7 @@ function! FileSetChange()
 		else
 			silent execute("set noexpandtab")
 		endif
+		silent execute("%retab!")
 	endif
 	"if CurFileInWorkSvn()
 	"	"只有svn里的文件的编码是gbk
@@ -1249,7 +1279,7 @@ function! InitAuGroup()
 		"t_vb must set here
 		autocmd GUIEnter * set vb t_vb=
 		autocmd QuickfixCmdPost make call QfMakeConv()
-		autocmd BufWritePost * call BuildTag()  
+		autocmd BufWritePost * call BuildTag()	
 		autocmd BufWritePost * call BuildCS()  
 		autocmd WinEnter * call SysOnWinEnter()  
 		autocmd BufReadPre * call BigFile(expand("<afile>"))  
@@ -1312,7 +1342,7 @@ nnoremap <Leader>em :messages<CR>
 nnoremap <Leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
 
 "输入
-nnoremap <Leader>at :call AddModifyTime()<CR>
+nnoremap <Leader>t :call AddModifyTime()<CR>
 nnoremap <Leader><Leader>a :call AntiPEP8()<CR>
 nnoremap rr :%s/<C-R>=expand("<cword>")<CR>/<C-R>=expand("<cword>")<CR>/gc<Left><Left><Left>
 
