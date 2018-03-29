@@ -1187,8 +1187,11 @@ function! EnterOpen()
 	let iCurTab=tabpagenr()
 	for iTab in range(1,tabpagenr('$'))
 		tabn
-		"call ZeroBasicLayout()
-		call BasicLayout()
+		if g:OS#mac
+			call ZeroBasicLayout()
+		else
+			call BasicLayout()
+		end
 	endfor
 	execute("tabn " . iCurTab)
 endfunction
@@ -1200,7 +1203,7 @@ function! BasicLayout()
 	"execute("vs|e " . g:g_SysEffqf . "|filetype detect")
 	call NewSysEffqf()
 	NERDTree
-	execute("normal tl")
+	TlistToggle
 	silent execute("set equalalways")
 endfunction
 
@@ -1314,10 +1317,10 @@ nnoremap <F8> :call NewTabForTheFile()<CR>
 nnoremap <F11> :NERDTreeFind<CR>
 inoremap <F11> <ESC>:NERDTreeFind<CR>
 
-nnoremap <c-up> :call BackBufHis()<cr>
-nnoremap <c-down> :call FrontBufHis()<cr>
-vnoremap \\ :<c-w>call CommentFunc("'<","'<,'>-1")<cr>
-noremap \\ :call CommentFunc(".","")<cr>
+nnoremap <c-up> :call BackBufHis()<CR>
+nnoremap <c-down> :call FrontBufHis()<CR>
+vnoremap \\ :<c-w>call CommentFunc("'<","'<,'>-1")<CR>
+noremap \\ :call CommentFunc(".","")<CR>
 
 nnoremap <Leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
 nnoremap <Leader><Leader>c :call CheckPy()<CR>
@@ -1373,8 +1376,29 @@ nnoremap <c-j> <c-w>j
 nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
 
-nmap <c-s-left> <c-pageup>:set equalalways<cr>
-nmap <c-s-right> <c-pagedown>:set equalalways<cr>
+nmap <c-s-left> <c-pageup>:set equalalways<CR>
+nmap <c-s-right> <c-pagedown>:set equalalways<CR>
+if g:OS#mac
+	nmap <D-1> :tabn 1<CR>:set equalalways<CR>
+	nmap <D-2> :tabn 2<CR>:set equalalways<CR>
+	nmap <D-3> :tabn 3<CR>:set equalalways<CR>
+	nmap <D-4> :tabn 4<CR>:set equalalways<CR>
+	nmap <D-5> :tabn 5<CR>:set equalalways<CR>
+	nmap <D-6> :tabn 6<CR>:set equalalways<CR>
+	nmap <D-7> :tabn 7<CR>:set equalalways<CR>
+	nmap <D-8> :tabn 8<CR>:set equalalways<CR>
+	nmap <D-9> :tabn 9<CR>:set equalalways<CR>
+else
+	nmap <C-1> :tabn 1<CR>:set equalalways<CR>
+	nmap <C-2> :tabn 2<CR>:set equalalways<CR>
+	nmap <C-3> :tabn 3<CR>:set equalalways<CR>
+	nmap <C-4> :tabn 4<CR>:set equalalways<CR>
+	nmap <C-5> :tabn 5<CR>:set equalalways<CR>
+	nmap <C-6> :tabn 6<CR>:set equalalways<CR>
+	nmap <C-7> :tabn 7<CR>:set equalalways<CR>
+	nmap <C-8> :tabn 8<CR>:set equalalways<CR>
+	nmap <C-9> :tabn 9<CR>:set equalalways<CR>
+endif
 
 inoremap ( ()<left>
 inoremap [ []<left>
