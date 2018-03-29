@@ -886,6 +886,7 @@ function! FileSetChange()
 			silent execute("set nowrap")
 			silent execute("set imd")
 		endif
+		silent execute("set tabstop=4")
 		if &filetype=="python"
 			silent execute("set expandtab")
 		else
