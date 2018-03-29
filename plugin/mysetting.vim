@@ -1149,7 +1149,7 @@ function! OnChangeDir()
 	if sNewPro==#""
 		return
 	endif
-	if g:OS#win||g:OS#mac
+	if g:OS#win||g:OS#mac||g:OS#unix
 		call ChangePro(sNewPro)
 	endif
 endfunction
@@ -1196,8 +1196,8 @@ endfunction
 function! BasicLayout()
 	call CloseLayout()
 	MBEOpen
-"	bo 10 copen 
-"	execute("vs|e " . g:g_SysEffqf . "|filetype detect")
+	"bo 10 copen 
+	"execute("vs|e " . g:g_SysEffqf . "|filetype detect")
 	call NewSysEffqf()
 	NERDTree
 	execute("normal tl")
