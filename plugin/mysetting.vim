@@ -1373,8 +1373,8 @@ nnoremap <c-j> <c-w>j
 nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
 
-nmap <c-s-left> <c-pageup>
-nmap <c-s-right> <c-pagedown>
+nmap <c-s-left> <c-pageup>:set equalalways<cr>
+nmap <c-s-right> <c-pagedown>:set equalalways<cr>
 
 inoremap ( ()<left>
 inoremap [ []<left>
