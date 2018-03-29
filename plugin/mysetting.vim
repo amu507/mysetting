@@ -196,7 +196,8 @@ if g:OS#gui
 		winpos 0 0
 		"max window 
 		au GUIEnter * simalt ~x
-	elseif g:OS#mac
+	elseif g:OS#mac||g:OS#unix
+		winpos 0 0
 		set lines=999 columns=999
 	endif
 endif
@@ -1158,7 +1159,7 @@ function! BeforeLeave()
 	call CloseLayout()
 	call SaveSearch()
 	call SaveBufMgr()
-	if g:OS#win||g:OS#mac
+	if g:OS#win||g:OS#mac||g:OS#unix
 		execute('mksession! ' . g:g_MFSession)
 		let lstLine=readfile(g:g_MFSession)
 		let lstNew=[]
@@ -1174,7 +1175,7 @@ function! BeforeLeave()
 endfunction
 
 function! AfterEnter()
-	if g:OS#win||g:OS#mac
+	if g:OS#win||g:OS#mac||g:OS#unix
 		execute('source ' . g:g_MFSession)
 	endif
 	call EnterOpen()
@@ -1186,7 +1187,8 @@ function! EnterOpen()
 	let iCurTab=tabpagenr()
 	for iTab in range(1,tabpagenr('$'))
 		tabn
-		call ZeroBasicLayout()
+		"call ZeroBasicLayout()
+		call BasicLayout()
 	endfor
 	execute("tabn " . iCurTab)
 endfunction
