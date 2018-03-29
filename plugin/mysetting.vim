@@ -1389,15 +1389,15 @@ if g:OS#mac
 	nmap <D-8> :tabn 8<CR>:set equalalways<CR>
 	nmap <D-9> :tabn 9<CR>:set equalalways<CR>
 else
-	nmap <C-1> :tabn 1<CR>:set equalalways<CR>
-	nmap <C-2> :tabn 2<CR>:set equalalways<CR>
-	nmap <C-3> :tabn 3<CR>:set equalalways<CR>
-	nmap <C-4> :tabn 4<CR>:set equalalways<CR>
-	nmap <C-5> :tabn 5<CR>:set equalalways<CR>
-	nmap <C-6> :tabn 6<CR>:set equalalways<CR>
-	nmap <C-7> :tabn 7<CR>:set equalalways<CR>
-	nmap <C-8> :tabn 8<CR>:set equalalways<CR>
-	nmap <C-9> :tabn 9<CR>:set equalalways<CR>
+	nmap <a-1> :tabn 1<CR>:set equalalways<CR>
+	nmap <a-2> :tabn 2<CR>:set equalalways<CR>
+	nmap <a-3> :tabn 3<CR>:set equalalways<CR>
+	nmap <a-4> :tabn 4<CR>:set equalalways<CR>
+	nmap <a-5> :tabn 5<CR>:set equalalways<CR>
+	nmap <a-6> :tabn 6<CR>:set equalalways<CR>
+	nmap <a-7> :tabn 7<CR>:set equalalways<CR>
+	nmap <a-8> :tabn 8<CR>:set equalalways<CR>
+	nmap <a-9> :tabn 9<CR>:set equalalways<CR>
 endif
 
 inoremap ( ()<left>
