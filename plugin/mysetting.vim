@@ -890,11 +890,11 @@ function! FileSetChange()
 		silent execute("set tabstop=4")
 		if &filetype=="python"
 			silent execute("set expandtab")
+			silent execute("%retab!")
+			silent execute("w!")
 		else
 			silent execute("set noexpandtab")
 		endif
-		silent execute("%retab!")
-		silent execute("w!")
 	endif
 	"if CurFileInWorkSvn()
 	"	"只有svn里的文件的编码是gbk
