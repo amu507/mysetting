@@ -439,6 +439,8 @@ function! CompileAndRun()
 		exec "!firefox %.html &"
 	elseif &filetype == 'lua'
 		exec "!time lua %"
+	elseif &filetype == 'sql'
+		exec "!mysql -u root -p123456 < %"
 	endif
 endfunction
 
