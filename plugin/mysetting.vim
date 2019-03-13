@@ -33,9 +33,9 @@ if g:OS#win
 	let $VIMFILE = $VIM.'\_vimrc'
 	let $MYSETTING= $BUNDLE.'\mysetting\plugin\mysetting.vim'
 	let $WORK = 'D:\work'
-	let $SERVER = $WORK.'\server'
-	let $MYLIB = $WORK.'\mylibrary'
-	let $GITHUB = $WORK . '\GitHub'
+	let $NOTE = 'D:\note'
+	let $PRIV = 'D:\private'
+	let $OPEN = 'D:\opensource'
 	let g:g_PathSplit="\\"
 elseif g:OS#mac
 	let $VIM = $HOME.'/.vim'
@@ -44,9 +44,9 @@ elseif g:OS#mac
 	let $VIMFILE = $VIM.'/gvimrc'
 	let $MYSETTING= $BUNDLE.'/mysetting/plugin/mysetting.vim'
 	let $WORK = $HOME.'/work'
-	let $SERVER = $WORK.'/server'
-	let $MYLIB = $WORK.'/mylibrary'
-	let $GITHUB = $WORK . '/GitHub'
+	let $NOTE = $HOME.'/note'
+	let $PRIV = $HOME.'/private'
+	let $OPEN = $HOME.'/opensource'
 	let g:g_PathSplit="/"
 else
 	let $VIM = $HOME.'/.vim'
@@ -55,9 +55,9 @@ else
 	let $VIMFILE = $VIM.'/gvimrc'
 	let $MYSETTING= $BUNDLE.'/mysetting/plugin/mysetting.vim'
 	let $WORK = $HOME.'/work'
-	let $SERVER = $WORK.'/server'
-	let $MYLIB = $WORK.'/mylibrary'
-	let $GITHUB = $WORK . '/GitHub'
+	let $NOTE = $HOME.'/note'
+	let $PRIV = $HOME.'/private'
+	let $OPEN = $HOME.'/opensource'
 	let g:g_PathSplit="/"
 endif
 
@@ -75,6 +75,7 @@ let g:g_EffqfName="sys.effqf"
 let g:g_SysEffqf=g:g_DataPath .g:g_PathSplit. g:g_EffqfName
 let g:g_ProPaths={}
 let g:g_ProExts={}
+let g:g_ProIgnores={}
 let g:g_CurPro=""
 let g:g_Pro2DB={}
 let g:g_UseCS=0
@@ -145,9 +146,11 @@ function! SysInit()
 		let lstTmp=g:g_ProPaths[sProPath]
 		let lstSub=lstTmp[0]
 		let lstOth=lstTmp[1]
-		let lstExt=lstTmp[2]
+		let lstIgn=lstTmp[2]
+		let lstExt=lstTmp[3]
 		let g:g_ProExts[sProPath]=lstExt
 		let g:g_ProPaths[sProPath]=[]
+		let g:g_ProIgnores[sProPath]=lstIgn
 		for sSub in lstSub 
 			call add(g:g_ProPaths[sProPath],sProPath . sSub)
 		endfor
@@ -302,7 +305,7 @@ function! ClearSuffixFiles(...)
 endfunction
 
 function! GetCommentSign()
-	let dComment={'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--'}
+	let dComment={'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//', 'bat':'::'}
 	"默认值不要改否则其它用到的地方会出错
 	let sComment=get(dComment,expand("%:e"),'#')
 	return sComment
@@ -386,12 +389,15 @@ function! WriteTitle(tInfo,lineno)
 endfunction
 
 function! SetTitle()
+	let fType=expand("%:e")
 	let tInfo=[]
 	let iStartLine=1
-	if &filetype=="python"
+	if fType=="py"
 		call add(tInfo," -*- coding: utf-8 -*-")
-	elseif &filetype=="sh"
-		call add(tInfo,"!/bin/bash ")
+	elseif fType=="sh"
+		call add(tInfo,"!/bin/sh")
+	elseif fType=="bash"
+		call add(tInfo,"!/bin/bash")
 	endif
 	call add(tInfo,"===================================")
 	call add(tInfo," Author	:".g:Author)
@@ -442,6 +448,8 @@ function! CompileAndRun()
 		exec "!time lua %"
 	elseif &filetype == 'sql'
 		exec "!mysql -u root -p123456 < %"
+	elseif &filetype == 'javascript'
+		exec '!node %'
 	endif
 endfunction
 
@@ -805,7 +813,7 @@ endfunction
 "结束定义FormartSrc
 
 function! InsertTxtPEP8()
-	silent exec "set fileencoding=gbk"
+	silent exec "set fileencoding=utf-8"
 	let iCurLine=line(".")
 	if (&filetype=="py"||&filetype=="python")&&(iCurLine!=0&&g:startinsertline!=0)
 		let sExe='Autopep8 --range '.g:startinsertline.' '.iCurLine
@@ -814,13 +822,13 @@ function! InsertTxtPEP8()
 	silent exec "set fileencoding=utf-8"
 endfunction
 
-function! AutoPEP8()
-	silent exec "set fileencoding=gbk"
-	silent w
-	call Autopep8()
-	silent exec "set fileencoding=utf-8"
-	silent w
-endfunction
+"function! AutoPEP8()
+"	silent exec "set fileencoding=utf-8"
+"	silent w
+"	call Autopep8()
+"	silent exec "set fileencoding=utf-8"
+"	silent w
+"endfunction
 
 let g:startinsertline=0
 function! StartInsert()
@@ -852,28 +860,11 @@ function! CurFileInBundle()
 	return 0
 endfunction
 
-function! CurFileInWorkSvn()
-	if InSysBuf()
-		return 0
-	endif
-python << EOF
-from vimenv import env
-sWorkPath=env.var("$SERVER")
-sCurFilePath=env.var("expand(\"%:p:h\")")
-if sCurFilePath.startswith(sWorkPath):
-	iRet=1
-else:
-	iRet=0
-env.exe("let l:iRet=%s"%iRet)
-EOF
-	return l:iRet
-endfunction
-
 function! IsRealFile()
 	if InSysBuf()
 		return 0
 	endif
-	for sType in ["text","python","vim","c","cpp","h","java","lua",'sh']
+	for sType in ["text","python","vim","c","cpp","h","java","lua",'sh','solidity','javascript']
 		if sType==&filetype
 			return 1
 		endif
@@ -881,30 +872,43 @@ function! IsRealFile()
 	return 0
 endfunction
 
+function! IsOldJS()
+	let l:fType=expand("%:e")
+	if fType!="js"
+		return 0
+	endif
+python << EOF
+from vimenv import env
+path = env.var('expand("%:p:h")')
+OldList = ["nng", "monsterrun"]
+env.exe("let l:ret=0")
+for name in OldList:
+	if "assets" in path and name in path:
+		env.exe("let l:ret=1")
+		break
+EOF
+	return l:ret
+endfunction
+
 function! FileSetChange()
 	if IsRealFile()
 		if &filetype=="text"
 			silent execute("set wrap")
-			silent execute("set noimd")
+			"silent execute("set noimd")
 		else
 			silent execute("set nowrap")
-			silent execute("set imd")
+			"silent execute("set imd")
 		endif
 		silent execute("set tabstop=4")
-		if &filetype=="python"
+		silent execute("set shiftwidth=4")
+		if &filetype=="python" || &filetype=="solidity" || IsOldJS()
 			silent execute("set expandtab")
-			silent execute("%retab!")
-			silent execute("w!")
+			"silent execute("%retab!")
+			"silent execute("w!")
 		else
 			silent execute("set noexpandtab")
 		endif
 	endif
-	"if CurFileInWorkSvn()
-	"	"只有svn里的文件的编码是gbk
-	"	silent execute("set fileencoding=gbk")
-	"else
-	"	silent execute("set fileencoding=utf-8")
-	"endif
 endfunction
 
 function! FileMapChange()
@@ -922,6 +926,10 @@ function! FileMapChange()
 		elseif &filetype=="c"||&filetype=="cpp"
 			nnoremap <Leader>ad oprintf("wzytxt======\n");<left><left><left><left><left>
 			nnoremap <Leader>dd :g/^.*printf("wzytxt=.*$/d<CR>
+		elseif &filetype=="javascript"
+			nnoremap <Leader>ad oconsole.log("wzytxt======");<left><left><left>
+			nnoremap <Leader>dd :g/^.*console.*("wzytxt=.*$/d<CR>
+			nnoremap <Leader>at oconsole.trace("wzytxt======")<ESC>
 		endif
 		if &filetype=="text"
 			inoremap （ （）<left>
@@ -1192,7 +1200,8 @@ function! EnterOpen()
 	for iTab in range(1,tabpagenr('$'))
 		tabn
 		if g:OS#mac
-			call ZeroBasicLayout()
+			"call ZeroBasicLayout()
+			call BasicLayout()
 		else
 			call BasicLayout()
 		end
@@ -1332,6 +1341,8 @@ nnoremap <F9> :call Run()<CR>
 inoremap <F9> <ESC>:call Run()<CR>
 
 "布局
+nnoremap <F1> <SPACE> 
+inoremap <F1> <SPACE> 
 nnoremap <F2> :call OnlyTabBuff()<CR> 
 nnoremap <F3> :tabnew\|call ClearTabBufs()\|call BasicLayout()\|execute("NERDTree " . g:g_DefaultTree)<CR>
 nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<CR>
