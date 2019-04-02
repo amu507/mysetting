@@ -880,7 +880,7 @@ function! IsOldJS()
 python << EOF
 from vimenv import env
 path = env.var('expand("%:p:h")')
-OldList = ["nng", "monsterrun"]
+OldList = env.var('g:g_JS_expandtab')
 env.exe("let l:ret=0")
 for name in OldList:
 	if "assets" in path and name in path:
