@@ -31,35 +31,22 @@ if g:OS#win
 	let $VIMFOLDER = $VIM.'\vimfiles'
 	let $BUNDLE = $VIMFOLDER.'\bundle'
 	let $VIMFILE = $VIM.'\_vimrc'
-	let $MYSETTING= $BUNDLE.'\mysetting\plugin\mysetting.vim'
+	let $MYSETTING = $BUNDLE.'\mysetting\plugin\mysetting.vim'
 	let $WORK = 'D:\work'
-	let $NOTE = 'D:\note'
-	let $PRIV = 'D:\private'
-	let $OPEN = 'D:\opensource'
 	let g:g_PathSplit="\\"
-elseif g:OS#mac
-	let $VIM = $HOME.'/.vim'
-	let $VIMFOLDER = $HOME.'/.vim'
-	let $BUNDLE = $VIMFOLDER.'/bundle'
-	let $VIMFILE = $VIM.'/gvimrc'
-	let $MYSETTING= $BUNDLE.'/mysetting/plugin/mysetting.vim'
-	let $WORK = $HOME.'/work'
-	let $NOTE = $HOME.'/note'
-	let $PRIV = $HOME.'/private'
-	let $OPEN = $HOME.'/opensource'
-	let g:g_PathSplit="/"
 else
 	let $VIM = $HOME.'/.vim'
 	let $VIMFOLDER = $HOME.'/.vim'
 	let $BUNDLE = $VIMFOLDER.'/bundle'
 	let $VIMFILE = $VIM.'/gvimrc'
-	let $MYSETTING= $BUNDLE.'/mysetting/plugin/mysetting.vim'
+	let $MYSETTING = $BUNDLE.'/mysetting/plugin/mysetting.vim'
 	let $WORK = $HOME.'/work'
-	let $NOTE = $HOME.'/note'
-	let $PRIV = $HOME.'/private'
-	let $OPEN = $HOME.'/opensource'
 	let g:g_PathSplit="/"
 endif
+let $PROJ = $WORK.g:g_PathSplit.'project'
+let $NOTE = $WORK.g:g_PathSplit.'note'
+let $PRIV = $WORK.g:g_PathSplit.'private'
+let $OPEN = $WORK.g:g_PathSplit.'opensource'
 
 "start_readpros============================================================================================================
 let mapleader = "-"
@@ -201,7 +188,7 @@ if g:OS#gui
 		au GUIEnter * simalt ~x
 	elseif g:OS#mac||g:OS#unix
 		winpos 0 0
-		set lines=999 columns=999
+		set lines=200 columns=210
 	endif
 endif
 
@@ -238,7 +225,7 @@ nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
 "search and replace
 nnoremap cS :%s/\s\+$//g<CR>:noh<CR>				  "clear space end of line
 "忽略大小写
-"set ignorecase
+set ignorecase
 "搜索时智能忽略大小写
 "set smartcase
 
@@ -290,7 +277,7 @@ function! NewTabForTheFile()
 		return
 	endif
 	let sPath=expand("%:p")
-	exec "tabnew\|call ClearTabBufs()\|call ZeroBasicLayout()"
+	exec "tabnew\|call ClearTabBufs()\|call PlatformLayout()"
 	if bufwinnr(g:g_SysEffqf)!=#-1
 		execute(bufwinnr(g:g_SysEffqf) . " wincmd w")
 		execute("wincmd c")
@@ -941,7 +928,8 @@ function! FileMapChange()
 			inoremap ‘ ‘’<left>
 		endif
 		if &filetype=="html"
-			inoremap > <ESC>:call InsertHtmlTag()<CR>a<CR><Esc>O
+			"inoremap > <ESC>:call InsertHtmlTag()<CR>a<CR><Esc>O
+			inoremap > <ESC>:call InsertHtmlTag()<CR>a
 		else
 			inoremap > >
 		endif
@@ -1204,12 +1192,7 @@ function! EnterOpen()
 	let iCurTab=tabpagenr()
 	for iTab in range(1,tabpagenr('$'))
 		tabn
-		if g:OS#mac
-			"call ZeroBasicLayout()
-			call BasicLayout()
-		else
-			call BasicLayout()
-		end
+		call PlatformLayout()
 	endfor
 	execute("tabn " . iCurTab)
 endfunction
@@ -1221,6 +1204,7 @@ function! BasicLayout()
 	"execute("vs|e " . g:g_SysEffqf . "|filetype detect")
 	call NewSysEffqf()
 	NERDTree
+	let g:Tlist_WinWidth=15
 	TlistToggle
 	silent execute("set equalalways")
 endfunction
@@ -1229,7 +1213,18 @@ function! ZeroBasicLayout()
 	call CloseLayout()
 	MBEOpen
 	call NewSysEffqf()
+	NERDTree
+	let g:Tlist_WinWidth=1
+	TlistToggle
 	silent execute("set equalalways")
+endfunction
+
+function! PlatformLayout()
+	if g:OS#win
+		call BasicLayout()
+	else
+		call ZeroBasicLayout()
+	endif
 endfunction
 
 function! NewSysEffqf()
@@ -1312,7 +1307,7 @@ endfunction
 call InitAuGroup()
 
 "html自动补全
-autocmd BufNewFile *  setlocal filetype=html
+autocmd BufNewFile *.html setlocal filetype=html
 function! InsertHtmlTag()
 	let pat = '\c<\w\+\s*\(\s\+\w\+\s*=\s*[''#$;,()."a-z0-9]\+\)*\s*>'
 	normal! a>
@@ -1327,7 +1322,7 @@ function! InsertHtmlTag()
 	endif
 	:call cursor(save_cursor[1], save_cursor[2], save_cursor[3])
 endfunction
-"inoremap > <ESC>:call InsertHtmlTag()<CR>a<CR><Esc>O
+inoremap > <ESC>:call InsertHtmlTag()<CR>a<CR><Esc>O
 
 "start_keymap================================================================================
 
@@ -1366,7 +1361,7 @@ inoremap <F9> <ESC>:call Run()<CR>
 nnoremap <F1> <SPACE> 
 inoremap <F1> <SPACE> 
 nnoremap <F2> :call OnlyTabBuff()<CR> 
-nnoremap <F3> :tabnew\|call ClearTabBufs()\|call BasicLayout()\|execute("NERDTree " . g:g_DefaultTree)<CR>
+nnoremap <F3> :tabnew\|call ClearTabBufs()\|call PlatformLayout()\|execute("NERDTree " . g:g_DefaultTree)<CR>
 nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<CR>
 nnoremap <Leader>lo :call BasicLayout()<CR>
 nnoremap <Leader><Leader>lo :call ZeroBasicLayout()<CR>
@@ -1379,7 +1374,7 @@ nnoremap <Leader>ov :e $VIMFILE<CR>
 nnoremap <Leader>op :e $VIM/userdata/pros<CR>
 nnoremap <Leader>om :e $MYSETTING<CR>
 nnoremap <Leader>oa :call OpenAllVimSetting()<CR>
-nnoremap <Leader>ua :source $VIMFILE\|source $MYSETTING<CR>
+nnoremap <Leader>ua :source $VIMFILE\|source $MYSETTING\|call PlatformLayout()<CR>
 nnoremap <Leader>ec :execute("vsplit " . $VIMFOLDER.'\colors\health.vim')<CR> 
 nnoremap <Leader>em :messages<CR>
 nnoremap <Leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
