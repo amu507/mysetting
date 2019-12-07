@@ -188,7 +188,7 @@ if g:OS#gui
 		au GUIEnter * simalt ~x
 	elseif g:OS#mac||g:OS#unix
 		winpos 0 0
-		set lines=200 columns=210
+		set lines=66 columns=204
 	endif
 endif
 
@@ -225,7 +225,7 @@ nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
 "search and replace
 nnoremap cS :%s/\s\+$//g<CR>:noh<CR>				  "clear space end of line
 "忽略大小写
-set ignorecase
+"set ignorecase
 "搜索时智能忽略大小写
 "set smartcase
 
@@ -1352,7 +1352,7 @@ nnoremap <c-down> :call FrontBufHis()<CR>
 vnoremap \\ :<c-w>call CommentFunc("'<","'<,'>-1")<CR>
 noremap \\ :call CommentFunc(".","")<CR>
 
-nnoremap <Leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")
+nnoremap <Leader><Leader>n :call RenameCurFile("<C-R>=expand("%:t")<CR>")<Left><Left>
 nnoremap <Leader><Leader>c :call CheckPy()<CR>
 nnoremap <F9> :call Run()<CR>
 inoremap <F9> <ESC>:call Run()<CR>
