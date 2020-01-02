@@ -277,7 +277,7 @@ function! NewTabForTheFile()
 		return
 	endif
 	let sPath=expand("%:p")
-	exec "tabnew\|call ClearTabBufs()\|call PlatformLayout()"
+	exec "tabnew\|call ClearTabBufs()\|call AutoLayoutByOs()"
 	if bufwinnr(g:g_SysEffqf)!=#-1
 		execute(bufwinnr(g:g_SysEffqf) . " wincmd w")
 		execute("wincmd c")
@@ -394,13 +394,14 @@ function! SetTitle()
 endfunction
 
 function! AddModifyTime()
+	let sComment=GetCommentSign()
 	let iCurLine=line(".")
 	if iCurLine>0
 		let iCurLine=iCurLine-1
 	else
 		let iCurLine=iCurLine
 	endif
-	let sTime="\# ModifyTime:".strftime("%Y-%m-%d %H:%M:%S")
+	let sTime=sComment." Modify(wzy):".strftime("%Y-%m-%d %H:%M:%S")
 	call append(iCurLine,sTime)
 	"let sAuthor="\# Author	:".g:Author
 	"call append(iCurLine+1,sAuthor)
@@ -420,7 +421,7 @@ function! CompileAndRun()
 		exec "!javac %"
 		exec "!time java %<"
 	elseif &filetype == 'sh'
-		:!time bash %
+		:!time sh %
 	elseif &filetype == 'python'
 		exec "!time python3 %"
 	elseif &filetype == 'html'
@@ -1192,7 +1193,7 @@ function! EnterOpen()
 	let iCurTab=tabpagenr()
 	for iTab in range(1,tabpagenr('$'))
 		tabn
-		call PlatformLayout()
+		call AutoLayoutByOs()
 	endfor
 	execute("tabn " . iCurTab)
 endfunction
@@ -1219,7 +1220,7 @@ function! ZeroBasicLayout()
 	silent execute("set equalalways")
 endfunction
 
-function! PlatformLayout()
+function! AutoLayoutByOs()
 	if g:OS#win
 		call BasicLayout()
 	else
@@ -1361,10 +1362,10 @@ inoremap <F9> <ESC>:call Run()<CR>
 nnoremap <F1> <SPACE> 
 inoremap <F1> <SPACE> 
 nnoremap <F2> :call OnlyTabBuff()<CR> 
-nnoremap <F3> :tabnew\|call ClearTabBufs()\|call PlatformLayout()\|execute("NERDTree " . g:g_DefaultTree)<CR>
+nnoremap <F3> :tabnew\|call ClearTabBufs()\|call AutoLayoutByOs()\|execute("NERDTree " . g:g_DefaultTree)<CR>
 nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<CR>
 nnoremap <Leader>lo :call BasicLayout()<CR>
-nnoremap <Leader><Leader>lo :call ZeroBasicLayout()<CR>
+nnoremap <Leader><Leader>lo :call AutoLayoutByOs()<CR>
 
 "改变配色
 nnoremap <Leader>cc :call ChangeScheme()<CR>
@@ -1374,7 +1375,7 @@ nnoremap <Leader>ov :e $VIMFILE<CR>
 nnoremap <Leader>op :e $VIM/userdata/pros<CR>
 nnoremap <Leader>om :e $MYSETTING<CR>
 nnoremap <Leader>oa :call OpenAllVimSetting()<CR>
-nnoremap <Leader>ua :source $VIMFILE\|source $MYSETTING\|call PlatformLayout()<CR>
+nnoremap <Leader>ua :source $VIMFILE\|source $MYSETTING\|call AutoLayoutByOs()<CR>
 nnoremap <Leader>ec :execute("vsplit " . $VIMFOLDER.'\colors\health.vim')<CR> 
 nnoremap <Leader>em :messages<CR>
 nnoremap <Leader>es :execute("vsplit " . $VIM . '\vimfiles\UltiSnips\all.snippets')<CR>
