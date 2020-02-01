@@ -217,7 +217,8 @@ set backspace=indent,eol,start
 
 "fold
 set foldenable										"启用折叠
-"set foldmethod=manual								 "indent 折叠方式
+"set foldmethod=syntax
+"set foldmethod=manual
 set foldmethod=indent								 "indent 折叠方式
 set foldlevelstart=99
 nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
@@ -1205,7 +1206,6 @@ function! BasicLayout()
 	"execute("vs|e " . g:g_SysEffqf . "|filetype detect")
 	call NewSysEffqf()
 	NERDTree
-	let g:Tlist_WinWidth=15
 	TlistToggle
 	silent execute("set equalalways")
 endfunction
@@ -1215,8 +1215,6 @@ function! ZeroBasicLayout()
 	MBEOpen
 	call NewSysEffqf()
 	NERDTree
-	let g:Tlist_WinWidth=1
-	TlistToggle
 	silent execute("set equalalways")
 endfunction
 
@@ -1264,12 +1262,11 @@ function! QfMakeConv()
 endfunction
 
 function! SysOnWinEnter()
-	if bufname(winbufnr(winnr('#')))=~'__Tag_List__'
-		return
-	endif
-	if bufname(winbufnr(winnr()))=~'__Tag_List__'
-		return
-	endif
+	for name in ['__Tag_List__', 'NERD_tree', 'MiniBufExplorer']
+		if bufname(winbufnr(winnr()))=~name || bufname(winbufnr(winnr('#')))=~name
+			return
+		endif
+	endfor
 	let g:g_LastWinr=winnr('#')
 endfunction
 
@@ -1364,8 +1361,8 @@ inoremap <F1> <SPACE>
 nnoremap <F2> :call OnlyTabBuff()<CR> 
 nnoremap <F3> :tabnew\|call ClearTabBufs()\|call AutoLayoutByOs()\|execute("NERDTree " . g:g_DefaultTree)<CR>
 nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<CR>
-nnoremap <Leader>lo :call BasicLayout()<CR>
-nnoremap <Leader><Leader>lo :call AutoLayoutByOs()<CR>
+"nnoremap <Leader>lo :call BasicLayout()<CR>
+nnoremap <Leader>lo :call AutoLayoutByOs()<CR>
 
 "改变配色
 nnoremap <Leader>cc :call ChangeScheme()<CR>
