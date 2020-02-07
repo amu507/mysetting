@@ -292,39 +292,38 @@ function! ClearSuffixFiles(...)
 	"exec "!time bash /Users/wangzhiyun/work/sh/rm_suffixlist.sh"
 endfunction
 
-function! GetCommentSign()
+function! GetCommentSignHead()
 	let dComment={'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//', 'bat':'::', 'html':'<!--', 'css':'/*'}
 	"默认值不要改否则其它用到的地方会出错
-	let sComment=get(dComment,expand("%:e"),'#')
-	return sComment
+	return get(dComment,expand("%:e"),'#')
 endfunction
-function! GetCommentSignEnd()
+function! GetCommentSignTail()
 	let dComment={'html':'-->', 'css':'*/'}
 	"默认值不要改否则其它用到的地方会出错
-	let sComment=get(dComment,expand("%:e"),'')
-	return sComment
+	return get(dComment,expand("%:e"),'')
 endfunction
+
 "多行注释
 function! CommentFunc(sLine,sRange)
 	" 行尾
-	let sComment2 = GetCommentSignEnd()
-	let iComment2 = len(sComment2)
-	if iComment2 > 0
+	let sTail = GetCommentSignTail()
+	let lenTail = len(sTail)
+	if lenTail > 0
 		let len = len(getline(a:sLine))
-		if getline(a:sLine)[len-iComment2:]==#sComment2
-			execute(a:sRange . " normal " . "$" . (iComment2-1) . "X" . "x")
+		if getline(a:sLine)[len-lenTail:]==#sTail
+			execute(a:sRange . " normal " . "$" . (lenTail-1) . "X" . "x")
 		else
-			execute(a:sRange . " normal " . "$a" . sComment2)
+			execute(a:sRange . " normal " . "$a" . sTail)
 		endif
 	endif
 
 	" 行首
-	let sComment=GetCommentSign()
-	let iComment=len(sComment)
-	if getline(a:sLine)[0:0+iComment-1]==#sComment
-		execute(a:sRange . " normal " . "0" . iComment . "x")
+	let sHead=GetCommentSignHead()
+	let lenHead=len(sHead)
+	if getline(a:sLine)[0:0+lenHead-1]==#sHead
+		execute(a:sRange . " normal " . "0" . lenHead . "x")
 	else
-		execute(a:sRange . " normal " . "0i" . sComment)
+		execute(a:sRange . " normal " . "0i" . sHead)
 	endif
 endfunction
 
@@ -386,7 +385,7 @@ endfunction
 autocmd BufNewFile *.py,*.java,*.lua,*.sh,*.c,*.cpp,*.h exec ":call SetTitle()"
 
 function! WriteTitle(tInfo,lineno)
-	let sComment=GetCommentSign()
+	let sComment=GetCommentSignHead()
 	let iLine=a:lineno
 	for sInfo in a:tInfo
 		call setline(iLine,sComment.sInfo)
@@ -414,7 +413,7 @@ function! SetTitle()
 endfunction
 
 function! AddModifyTime()
-	let sComment=GetCommentSign()
+	let sComment=GetCommentSignHead()
 	let iCurLine=line(".")
 	if iCurLine>0
 		let iCurLine=iCurLine-1
