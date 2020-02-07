@@ -293,13 +293,32 @@ function! ClearSuffixFiles(...)
 endfunction
 
 function! GetCommentSign()
-	let dComment={'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//', 'bat':'::'}
+	let dComment={'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//', 'bat':'::', 'html':'<!--', 'css':'/*'}
 	"默认值不要改否则其它用到的地方会出错
 	let sComment=get(dComment,expand("%:e"),'#')
 	return sComment
 endfunction
+function! GetCommentSignEnd()
+	let dComment={'html':'-->', 'css':'*/'}
+	"默认值不要改否则其它用到的地方会出错
+	let sComment=get(dComment,expand("%:e"),'')
+	return sComment
+endfunction
 "多行注释
 function! CommentFunc(sLine,sRange)
+	" 行尾
+	let sComment2 = GetCommentSignEnd()
+	let iComment2 = len(sComment2)
+	if iComment2 > 0
+		let len = len(getline(a:sLine))
+		if getline(a:sLine)[len-iComment2:]==#sComment2
+			execute(a:sRange . " normal " . "$" . (iComment2-1) . "X" . "x")
+		else
+			execute(a:sRange . " normal " . "$a" . sComment2)
+		endif
+	endif
+
+	" 行首
 	let sComment=GetCommentSign()
 	let iComment=len(sComment)
 	if getline(a:sLine)[0:0+iComment-1]==#sComment
@@ -1320,7 +1339,7 @@ function! InsertHtmlTag()
 	endif
 	:call cursor(save_cursor[1], save_cursor[2], save_cursor[3])
 endfunction
-inoremap > <ESC>:call InsertHtmlTag()<CR>a<CR><Esc>O
+"inoremap > <ESC>:call InsertHtmlTag()<CR>a<CR><Esc>O
 
 "start_keymap================================================================================
 
