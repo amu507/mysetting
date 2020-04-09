@@ -293,19 +293,22 @@ function! ClearSuffixFiles(...)
 endfunction
 
 function! GetCommentSignHead()
-	let dComment={'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//', 'bat':'::', 'html':'<!--', 'css':'/*'}
+	let dComment = {'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//','javascript':'//', 'bat':'::', 'html':'<!--', 'css':'/*', 'less':'/*'}
+	let type = &filetype
 	"默认值不要改否则其它用到的地方会出错
-	return get(dComment,expand("%:e"),'#')
+	return get(dComment, type, '#')
 endfunction
 function! GetCommentSignTail()
-	let dComment={'html':'-->', 'css':'*/'}
+	let dComment={'html':'-->', 'css':'*/', 'less':'*/'}
+	let type = &filetype
 	"默认值不要改否则其它用到的地方会出错
-	return get(dComment,expand("%:e"),'')
+	return get(dComment, type, '')
 endfunction
 
 "多行注释
 function! CommentFunc(sLine,sRange)
 	" 行尾
+	let g:g_IgnoreHtmlTage += 1
 	let sTail = GetCommentSignTail()
 	let lenTail = len(sTail)
 	if lenTail > 0
@@ -320,11 +323,19 @@ function! CommentFunc(sLine,sRange)
 	" 行首
 	let sHead=GetCommentSignHead()
 	let lenHead=len(sHead)
-	if getline(a:sLine)[0:0+lenHead-1]==#sHead
+	if getline(a:sLine)[0:lenHead-1]==#sHead
 		execute(a:sRange . " normal " . "0" . lenHead . "x")
 	else
 		execute(a:sRange . " normal " . "0i" . sHead)
 	endif
+	let g:g_IgnoreHtmlTage -= 1
+endfunction
+
+function! AddSeparatorLine()
+	if !IsRealFile()
+		return
+	endif
+	execute("normal o".GetCommentSignHead()."--------------------------------------".GetCommentSignTail())
 endfunction
 
 function! GetEffectiveLine(sMsg)
@@ -871,7 +882,7 @@ function! IsRealFile()
 	if InSysBuf()
 		return 0
 	endif
-	for sType in ["text","python","vim","c","cpp","h","java","lua",'sh','solidity','javascript', 'html']
+	for sType in ["text","python","vim","c","cpp","h","java","lua",'sh','solidity','javascript', 'html', 'css']
 		if sType==&filetype
 			return 1
 		endif
@@ -1324,9 +1335,13 @@ call InitAuGroup()
 
 "html自动补全
 autocmd BufNewFile *.html setlocal filetype=html
+let g:g_IgnoreHtmlTage = 0
 function! InsertHtmlTag()
 	let pat = '\c<\w\+\s*\(\s\+\w\+\s*=\s*[''#$;,()."a-z0-9]\+\)*\s*>'
 	normal! a>
+	if g:g_IgnoreHtmlTage
+		return
+	endif
 	let save_cursor = getpos('.')
 	let result = matchstr(getline(save_cursor[1]), pat)
 	"if (search(pat, 'b', save_cursor[1]) && searchpair('<','','>','bn',0,  getline('.')) > 0)
@@ -1350,7 +1365,6 @@ if g:OS#win
 	vnoremap <A-w> :q<CR>
 else
 	nnoremap <F5> :call CompileAndRun()<CR>
-	nnoremap <F6> :silent call CompileAndRun()<CR>
 	nnoremap <c-s> :w!<CR>
 	vnoremap <c-s> :w!<CR>
 	nnoremap <D-r> <c-r>
@@ -1424,8 +1438,6 @@ nnoremap <c-j> <c-w>j
 nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
 
-nmap <c-s-left> <c-pageup>:set equalalways<CR>
-nmap <c-s-right> <c-pagedown>:set equalalways<CR>
 if g:OS#mac
 	nmap <D-1> :tabn 1<CR>:set equalalways<CR>
 	nmap <D-2> :tabn 2<CR>:set equalalways<CR>
@@ -1436,6 +1448,8 @@ if g:OS#mac
 	nmap <D-7> :tabn 7<CR>:set equalalways<CR>
 	nmap <D-8> :tabn 8<CR>:set equalalways<CR>
 	nmap <D-9> :tabn 9<CR>:set equalalways<CR>
+	nmap <D-left> <c-pageup>:set equalalways<CR>
+	nmap <D-right> <c-pagedown>:set equalalways<CR>
 else
 	nmap <a-1> :tabn 1<CR>:set equalalways<CR>
 	nmap <a-2> :tabn 2<CR>:set equalalways<CR>
@@ -1446,6 +1460,8 @@ else
 	nmap <a-7> :tabn 7<CR>:set equalalways<CR>
 	nmap <a-8> :tabn 8<CR>:set equalalways<CR>
 	nmap <a-9> :tabn 9<CR>:set equalalways<CR>
+"	nmap <c-s-left> <c-pageup>:set equalalways<CR>
+"	nmap <c-s-right> <c-pagedown>:set equalalways<CR>
 endif
 
 inoremap ( ()<left>
@@ -1461,6 +1477,7 @@ imap <c-l> <Right>
 "map
 nnoremap tl :TlistClose<CR>:TlistToggle<CR>
 nnoremap tlc :TlistClose<CR>
+nnoremap <Leader>s :call AddSeparatorLine()<CR>
 
 "goto
 nnoremap <Leader>gq :call GotoWindow("sys.effqf")<CR> 
