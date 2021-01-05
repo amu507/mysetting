@@ -44,6 +44,7 @@ else
 	let g:g_PathSplit="/"
 endif
 let $PROJ = $WORK.g:g_PathSplit.'project'
+let $PUBL = $WORK.g:g_PathSplit.'publish'
 let $NOTE = $WORK.g:g_PathSplit.'note'
 let $PRIV = $WORK.g:g_PathSplit.'private'
 let $OPEN = $WORK.g:g_PathSplit.'opensource'
@@ -61,6 +62,7 @@ let g:g_MFSession=g:g_DataPath .g:g_PathSplit. 'mysession.vim'
 let g:g_EffqfName="sys.effqf"
 let g:g_SysEffqf=g:g_DataPath .g:g_PathSplit. g:g_EffqfName
 let g:g_ProPaths={}
+let g:g_ProPathList=[]
 let g:g_ProExts={}
 let g:g_ProIgnores={}
 let g:g_CurPro=""
@@ -138,13 +140,15 @@ function! SysInit()
 		let g:g_ProExts[sProPath]=lstExt
 		let g:g_ProPaths[sProPath]=[]
 		let g:g_ProIgnores[sProPath]=lstIgn
-		for sSub in lstSub 
+        call add(g:g_ProPathList, sProPath)
+        for sSub in lstSub 
 			call add(g:g_ProPaths[sProPath],sProPath . sSub)
 		endfor
 		for sOth in lstOth
 			call add(g:g_ProPaths[sProPath],sOth)
 		endfor
 	endfor
+    call sort(g:g_ProPathList)
 endfunction
 call SysInit()
 
@@ -188,7 +192,7 @@ if g:OS#gui
 		au GUIEnter * simalt ~x
 	elseif g:OS#mac||g:OS#unix
 		winpos 0 0
-		set lines=66 columns=204
+		set lines=68 columns=210
 	endif
 endif
 
@@ -204,8 +208,8 @@ set termencoding=utf-8
 
 "indent and fold 
 set smartindent									   "启用智能对齐方式
-set noexpandtab										 "将空格转换为Tab键
-"set expandtab										 "将Tab键转换为空格
+"set noexpandtab										 "将空格转换为Tab键
+set expandtab										 "将Tab键转换为空格
 set tabstop=4										 "设置Tab键的宽度，可以更改，如：宽度为2
 set shiftwidth=4									  "换行时自动缩进宽度，可更改（宽度同tabstop）
 set smarttab										  "指定按一次backspace就删除shiftwidth宽度
@@ -293,7 +297,7 @@ function! ClearSuffixFiles(...)
 endfunction
 
 function! GetCommentSignHead()
-	let dComment = {'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//','javascript':'//', 'bat':'::', 'html':'<!--', 'css':'/*', 'less':'/*'}
+	let dComment = {'cpp':'//','c':'//','h':'//','vim':'"','java':'//','lua':'--','sol':'//','js':'//','javascript':'//','typescript':'//', 'dosbatch':'::', 'html':'<!--', 'css':'/*', 'less':'/*'}
 	let type = &filetype
 	"默认值不要改否则其它用到的地方会出错
 	return get(dComment, type, '#')
@@ -759,7 +763,8 @@ endfunction
 command! -nargs=?  GTree call GotoTree(<f-args>) 
 function! GotoTree(...)
 	let sFile=get(a:000,0,-1)
-	let lstPath=keys(g:g_ProPaths)
+"	let lstPath=keys(g:g_ProPaths)
+	let lstPath=g:g_ProPathList
 	if sFile==#-1 
 		let lstTmp=[]
 		for i in range(0,len(lstPath)-1)
@@ -882,7 +887,7 @@ function! IsRealFile()
 	if InSysBuf()
 		return 0
 	endif
-	for sType in ["text","python","vim","c","cpp","h","java","lua",'sh','solidity','javascript', 'html', 'css']
+	for sType in ["text","python","vim","c","cpp","h","java","lua","sh","solidity","javascript","typescript","html","css", "dosbatch"]
 		if sType==&filetype
 			return 1
 		endif
@@ -917,15 +922,15 @@ function! FileSetChange()
 			silent execute("set nowrap")
 			"silent execute("set imd")
 		endif
-		silent execute("set tabstop=4")
-		silent execute("set shiftwidth=4")
-		if &filetype=="python" || &filetype=="solidity" || IsOldJS()
-			silent execute("set expandtab")
-			"silent execute("%retab!")
-			"silent execute("w!")
-		else
-			silent execute("set noexpandtab")
-		endif
+		"silent execute("set tabstop=4")
+		"silent execute("set shiftwidth=4")
+		"if &filetype=="python" || &filetype=="solidity" || IsOldJS()
+		"	silent execute("set expandtab")
+		"	"silent execute("%retab!")
+		"	"silent execute("w!")
+		"else
+		"	silent execute("set noexpandtab")
+		"endif
 	endif
 endfunction
 
@@ -944,10 +949,13 @@ function! FileMapChange()
 		elseif &filetype=="c"||&filetype=="cpp"
 			nnoremap <Leader>ad oprintf("wzytxt======\n");<left><left><left><left><left>
 			nnoremap <Leader>dd :g/^.*printf("wzytxt=.*$/d<CR>
-		elseif &filetype=="javascript"
+		elseif &filetype=="javascript"||&filetype=="typescript"
 			nnoremap <Leader>ad oconsole.log("wzytxt======");<left><left><left>
 			nnoremap <Leader>dd :g/^.*console.*("wzytxt=.*$/d<CR>
-			nnoremap <Leader>at oconsole.trace("wzytxt======")<ESC>
+			nnoremap <Leader>at oconsole.warn("wzytxt======");<ESC>
+		elseif &filetype=="dosbatch"
+			nnoremap <Leader>ad oecho "wzytxt======"<left>
+			nnoremap <Leader>dd :g/^.*echo.*wzytxt=.*$/d<CR>
 		endif
 		if &filetype=="text"
 			inoremap （ （）<left>
@@ -1393,6 +1401,7 @@ inoremap <F1> <SPACE>
 nnoremap <F2> :call OnlyTabBuff()<CR> 
 nnoremap <F3> :tabnew\|call ClearTabBufs()\|call AutoLayoutByOs()\|execute("NERDTree " . g:g_DefaultTree)<CR>
 nnoremap <F4> :call CloseLayout()\|tabc\|call ClearNoUseBuff()<CR>
+nnoremap <F10> :tabedit <C-R>=expand("%:t")<CR><CR>
 "nnoremap <Leader>lo :call BasicLayout()<CR>
 nnoremap <Leader>lo :call AutoLayoutByOs()<CR>
 
